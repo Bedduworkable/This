@@ -6,6 +6,7 @@ import 'models.dart';
 import 'providers.dart';
 import 'widgets.dart';
 import 'utils.dart';
+import 'services.dart';
 
 // Admin Dashboard
 class AdminDashboard extends ConsumerWidget {
@@ -337,7 +338,7 @@ class _ActionCard extends StatelessWidget {
   }
 }
 
-// Admin Leads Screen
+// Admin Leads Screen - FIXED to use LeadListTile
 class AdminLeadsScreen extends ConsumerStatefulWidget {
   const AdminLeadsScreen({super.key});
 
@@ -425,7 +426,7 @@ class _AdminLeadsScreenState extends ConsumerState<AdminLeadsScreen> {
             ),
           ),
 
-          // Leads List
+          // Leads List - FIXED to use LeadListTile
           Expanded(
             child: allLeads.when(
               loading: () => const LoadingWidget(message: 'Loading leads...'),
@@ -449,7 +450,7 @@ class _AdminLeadsScreenState extends ConsumerState<AdminLeadsScreen> {
                 return ListView.builder(
                   itemCount: displayLeads.length,
                   itemBuilder: (context, index) {
-                    return CompactLeadCard(lead: displayLeads[index]);
+                    return LeadListTile(lead: displayLeads[index]);
                   },
                 );
               },
@@ -458,6 +459,145 @@ class _AdminLeadsScreenState extends ConsumerState<AdminLeadsScreen> {
         ],
       ),
     );
+  }
+}
+
+// NEW: Lead List Tile Widget for Admin (same as the one in lead_screens)
+class LeadListTile extends ConsumerWidget {
+  final LeadModel lead;
+
+  const LeadListTile({super.key, required this.lead});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFE0E0E0)),
+      ),
+      child: ListTile(
+        onTap: () => context.push('/lead/${lead.id}'),
+        leading: CircleAvatar(
+          radius: 20.w,
+          backgroundColor: const Color(0xFFE60023).withOpacity(0.1),
+          child: Text(
+            AppHelpers.initials(lead.name),
+            style: TextStyle(
+              color: const Color(0xFFE60023),
+              fontSize: 14.sp,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        title: Text(
+          lead.name,
+          style: TextStyle(
+            fontSize: 16.sp,
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFF333333),
+          ),
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              AppHelpers.formatPhoneNumber(lead.phone),
+              style: TextStyle(
+                fontSize: 14.sp,
+                color: const Color(0xFF666666),
+              ),
+            ),
+            SizedBox(height: 4.h),
+            Row(
+              children: [
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                  decoration: BoxDecoration(
+                    color: _getStatusColor(lead.status).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    lead.status,
+                    style: TextStyle(
+                      fontSize: 10.sp,
+                      color: _getStatusColor(lead.status),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                SizedBox(width: 8.w),
+                Text(
+                  '• ${AppHelpers.timeAgo(lead.updatedAt)}',
+                  style: TextStyle(
+                    fontSize: 11.sp,
+                    color: const Color(0xFF999999),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Call Button
+            Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFFE60023).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: IconButton(
+                icon: Icon(Icons.call, size: 18.w, color: const Color(0xFFE60023)),
+                onPressed: () async {
+                  final success = await CallService.makeCall(lead.phone);
+                  if (success && context.mounted) {
+                    showDialog(
+                      context: context,
+                      builder: (context) => CallOutcomeDialog(
+                        leadId: lead.id,
+                        leadName: lead.name,
+                      ),
+                    );
+                  }
+                },
+                constraints: BoxConstraints(minWidth: 36.w, minHeight: 36.w),
+                padding: EdgeInsets.all(6.w),
+              ),
+            ),
+
+            // Follow-up indicator
+            if (lead.followUp != null) ...[
+              SizedBox(width: 8.w),
+              Icon(
+                Icons.schedule,
+                size: 16.w,
+                color: lead.followUp!.isBefore(DateTime.now())
+                    ? const Color(0xFFE53935)
+                    : const Color(0xFF4CAF50),
+              ),
+            ],
+          ],
+        ),
+        contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+      ),
+    );
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'untouched lead':
+        return const Color(0xFF2196F3);
+      case 'site visit follow-up':
+        return const Color(0xFFFF9800);
+      case 'site visit completed':
+        return const Color(0xFF4CAF50);
+      case 'not interested':
+        return const Color(0xFFE53935);
+      default:
+        return const Color(0xFF9E9E9E);
+    }
   }
 }
 

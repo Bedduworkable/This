@@ -34,82 +34,84 @@ class MyApp extends ConsumerWidget {
   }
 }
 
-// Pinterest-inspired theme
+// Premium theme inspired by modern dashboard designs
 class AppTheme {
   static ThemeData get lightTheme {
     return ThemeData(
-      primarySwatch: Colors.red,
-      primaryColor: const Color(0xFFE60023), // Pinterest red
-      scaffoldBackgroundColor: const Color(0xFFFAFAFA),
+      primarySwatch: Colors.blue,
+      primaryColor: const Color(0xFF3B82F6),
+      scaffoldBackgroundColor: const Color(0xFFF8FAFC),
       appBarTheme: const AppBarTheme(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: IconThemeData(color: Color(0xFF333333)),
+        iconTheme: IconThemeData(color: Color(0xFF1F2937)),
         titleTextStyle: TextStyle(
-          color: Color(0xFF333333),
+          color: Color(0xFF1F2937),
           fontSize: 18,
           fontWeight: FontWeight.w600,
         ),
       ),
       cardTheme: CardThemeData(
         color: Colors.white,
-        elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        elevation: 4,
+        shadowColor: const Color(0xFF1F2937).withOpacity(0.1),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFE60023),
+          backgroundColor: const Color(0xFF3B82F6),
           foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          elevation: 2,
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: Color(0xFFE60023)),
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFF3B82F6), width: 2),
         ),
         filled: true,
         fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       ),
       chipTheme: ChipThemeData(
-        backgroundColor: const Color(0xFFF5F5F5),
-        selectedColor: const Color(0xFFFFE5E5),
-        labelStyle: const TextStyle(fontSize: 12, color: Color(0xFF333333)),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: const Color(0xFFF3F4F6),
+        selectedColor: const Color(0xFFDDEAFE),
+        labelStyle: const TextStyle(fontSize: 12, color: Color(0xFF1F2937)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
       textTheme: const TextTheme(
         headlineLarge: TextStyle(
-          fontSize: 24,
+          fontSize: 28,
           fontWeight: FontWeight.bold,
-          color: Color(0xFF333333),
+          color: Color(0xFF1F2937),
         ),
         headlineMedium: TextStyle(
-          fontSize: 20,
+          fontSize: 22,
           fontWeight: FontWeight.w600,
-          color: Color(0xFF333333),
+          color: Color(0xFF1F2937),
         ),
         bodyLarge: TextStyle(
           fontSize: 16,
-          color: Color(0xFF333333),
+          color: Color(0xFF1F2937),
         ),
         bodyMedium: TextStyle(
           fontSize: 14,
-          color: Color(0xFF666666),
+          color: Color(0xFF6B7280),
         ),
         bodySmall: TextStyle(
           fontSize: 12,
-          color: Color(0xFF999999),
+          color: Color(0xFF9CA3AF),
         ),
       ),
     );
@@ -218,7 +220,9 @@ class SplashScreen extends ConsumerWidget {
               width: 80.w,
               height: 80.w,
               decoration: BoxDecoration(
-                color: const Color(0xFFE60023),
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF3B82F6), Color(0xFF1E40AF)],
+                ),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: const Icon(
@@ -227,47 +231,30 @@ class SplashScreen extends ConsumerWidget {
                 size: 40,
               ),
             ),
+            SizedBox(height: 24.h),
+            Text(
+              'Simple Lead CRM',
+              style: TextStyle(
+                fontSize: 24.sp,
+                fontWeight: FontWeight.bold,
+                color: const Color(0xFF1F2937),
+              ),
+            ),
             SizedBox(height: 8.h),
             Text(
               'Manage your leads efficiently',
               style: TextStyle(
                 fontSize: 14.sp,
-                color: const Color(0xFF666666),
+                color: const Color(0xFF6B7280),
               ),
             ),
             SizedBox(height: 40.h),
             const CircularProgressIndicator(
-              color: Color(0xFFE60023),
+              color: Color(0xFF3B82F6),
             ),
           ],
         ),
       ),
     );
   }
-}izedBox(height: 8.h),
-Text(
-'Manage your leads efficiently',
-style: TextStyle(
-fontSize: 14.sp,
-color: const Color(0xFF666666),
-),
-),
-SizedBox(height: 40.h),
-const CircularProgressIndicator(
-color: Color(0xFFE60023),
-),
-],
-),
-),
-);
 }
-}izedBox(height: 24.h),
-Text(
-'Simple Lead CRM',
-style: TextStyle(
-fontSize: 24.sp,
-fontWeight: FontWeight.bold,
-color: const Color(0xFF333333),
-),
-),
-S

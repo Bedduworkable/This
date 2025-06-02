@@ -106,17 +106,16 @@ class AuthService {
     return null;
   }
 
-  // Initialize default custom fields - NEW
+  // Initialize default custom fields - FIXED
   static Future<void> _initializeDefaultCustomFields() async {
     try {
-      // Check if fields already exist
-      final existingSources = await _firestore
+      // Check if fields already exist (check for any custom field)
+      final existingFields = await _firestore
           .collection('custom_fields')
-          .where('type', isEqualTo: 'source')
           .limit(1)
           .get();
 
-      if (existingSources.docs.isEmpty) {
+      if (existingFields.docs.isEmpty) {
         // Create default sources
         final defaultSources = ['Facebook', 'Google', 'Reference', 'Other'];
         for (final source in defaultSources) {
@@ -171,7 +170,7 @@ class AuthService {
 class FirestoreService {
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // CUSTOM FIELDS OPERATIONS - NEW
+  // CUSTOM FIELDS OPERATIONS - FIXED
 
   static Stream<List<CustomFieldModel>> getCustomFields(CustomFieldType type) {
     return _firestore

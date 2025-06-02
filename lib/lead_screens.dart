@@ -8,7 +8,7 @@ import 'widgets.dart';
 import 'utils.dart';
 import 'services.dart';
 
-// NEW: Navigation Dashboard (No Lead Display)
+// Premium Dashboard with Modern Design
 class LeadsListScreen extends ConsumerWidget {
   const LeadsListScreen({super.key});
 
@@ -16,202 +16,284 @@ class LeadsListScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isAdmin = ref.watch(isAdminProvider);
     final stats = ref.watch(leadStatsProvider);
+    final recentLeads = ref.watch(userLeadsProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFAFAFA),
-      appBar: AppBar(
-        title: const Text('My Leads'),
-        actions: [
-          // Edit Custom Fields Button
-          IconButton(
-            icon: const Icon(Icons.edit_attributes),
-            onPressed: () => context.push('/custom-fields'),
-            tooltip: 'Edit Custom Fields',
-          ),
-          // Admin Panel Access
-          if (isAdmin.value == true)
-            IconButton(
-              icon: const Icon(Icons.admin_panel_settings),
-              onPressed: () => context.push('/admin'),
-            ),
-          // Profile/Logout
-          PopupMenuButton(
-            icon: const Icon(Icons.account_circle),
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                onTap: () async {
-                  await ref.read(authControllerProvider.notifier).signOut();
-                },
-                child: const Row(
+      backgroundColor: const Color(0xFFF8FAFC),
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Premium Header Section
+            Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFF1E40AF), Color(0xFF3B82F6)],
+                ),
+              ),
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 30.h),
+                child: Column(
                   children: [
-                    Icon(Icons.logout, color: Color(0xFF666666)),
-                    SizedBox(width: 8),
-                    Text('Sign Out'),
+                    // Top Navigation Bar
+                    Row(
+                      children: [
+                        Container(
+                          padding: EdgeInsets.all(8.w),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            Icons.dashboard_rounded,
+                            color: Colors.white,
+                            size: 24.w,
+                          ),
+                        ),
+                        SizedBox(width: 12.w),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Lead Dashboard',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 20.sp,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                'Manage your business efficiently',
+                                style: TextStyle(
+                                  color: Colors.white.withOpacity(0.8),
+                                  fontSize: 14.sp,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        // Action Buttons
+                        Container(
+                          padding: EdgeInsets.all(8.w),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: IconButton(
+                            icon: Icon(Icons.settings, color: Colors.white, size: 20.w),
+                            onPressed: () => context.push('/custom-fields'),
+                          ),
+                        ),
+                        SizedBox(width: 8.w),
+                        if (isAdmin.value == true)
+                          Container(
+                            padding: EdgeInsets.all(8.w),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: IconButton(
+                              icon: Icon(Icons.admin_panel_settings, color: Colors.white, size: 20.w),
+                              onPressed: () => context.push('/admin'),
+                            ),
+                          ),
+                        SizedBox(width: 8.w),
+                        PopupMenuButton(
+                          icon: Container(
+                            padding: EdgeInsets.all(8.w),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(Icons.account_circle, color: Colors.white, size: 20.w),
+                          ),
+                          itemBuilder: (context) => [
+                            PopupMenuItem(
+                              onTap: () async {
+                                await ref.read(authControllerProvider.notifier).signOut();
+                              },
+                              child: const Row(
+                                children: [
+                                  Icon(Icons.logout, color: Color(0xFF666666)),
+                                  SizedBox(width: 8),
+                                  Text('Sign Out'),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+
+                    SizedBox(height: 30.h),
+
+                    // Stats Cards Row
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _PremiumStatsCard(
+                            title: 'Total Leads',
+                            value: '${stats['total'] ?? 0}',
+                            icon: Icons.people_outline,
+                            color: const Color(0xFF10B981),
+                            trend: '+12%',
+                          ),
+                        ),
+                        SizedBox(width: 12.w),
+                        Expanded(
+                          child: _PremiumStatsCard(
+                            title: 'Active',
+                            value: '${stats['active'] ?? 0}',
+                            icon: Icons.trending_up,
+                            color: const Color(0xFFF59E0B),
+                            trend: '+5%',
+                          ),
+                        ),
+                        SizedBox(width: 12.w),
+                        Expanded(
+                          child: _PremiumStatsCard(
+                            title: 'Closed',
+                            value: '${stats['completed'] ?? 0}',
+                            icon: Icons.check_circle_outline,
+                            color: const Color(0xFF8B5CF6),
+                            trend: '+8%',
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
-            ],
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(16.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Welcome Card
-            Card(
+            ),
+
+            // Main Content Area
+            Expanded(
               child: Padding(
                 padding: EdgeInsets.all(20.w),
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      padding: EdgeInsets.all(12.w),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFE60023).withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        Icons.business_center,
-                        color: const Color(0xFFE60023),
-                        size: 32.w,
+                    // Quick Actions Section
+                    Text(
+                      'Quick Actions',
+                      style: TextStyle(
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF1F2937),
                       ),
                     ),
-                    SizedBox(width: 16.w),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Lead Management',
-                            style: TextStyle(
-                              fontSize: 20.sp,
-                              fontWeight: FontWeight.bold,
-                              color: const Color(0xFF333333),
-                            ),
+                    SizedBox(height: 16.h),
+
+                    // Action Cards Grid
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _PremiumActionCard(
+                            title: 'Browse by Status',
+                            subtitle: 'View leads by their current status',
+                            icon: Icons.flag_outlined,
+                            color: const Color(0xFFEF4444),
+                            onTap: () => context.push('/leads/by-status'),
                           ),
-                          Text(
-                            'Organize and track your leads efficiently',
+                        ),
+                        SizedBox(width: 12.w),
+                        Expanded(
+                          child: _PremiumActionCard(
+                            title: 'Browse by Project',
+                            subtitle: 'Organize by project type',
+                            icon: Icons.business_outlined,
+                            color: const Color(0xFF10B981),
+                            onTap: () => context.push('/leads/by-project'),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    SizedBox(height: 12.h),
+
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _PremiumActionCard(
+                            title: 'Browse by Source',
+                            subtitle: 'Track lead sources',
+                            icon: Icons.source_outlined,
+                            color: const Color(0xFF3B82F6),
+                            onTap: () => context.push('/leads/by-source'),
+                          ),
+                        ),
+                        SizedBox(width: 12.w),
+                        Expanded(
+                          child: _PremiumActionCard(
+                            title: 'Add New Lead',
+                            subtitle: 'Create a new lead entry',
+                            icon: Icons.add_circle_outline,
+                            color: const Color(0xFF8B5CF6),
+                            onTap: () => context.push('/add-lead'),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    SizedBox(height: 24.h),
+
+                    // Recent Activity Section
+                    Row(
+                      children: [
+                        Text(
+                          'Recent Leads',
+                          style: TextStyle(
+                            fontSize: 18.sp,
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFF1F2937),
+                          ),
+                        ),
+                        const Spacer(),
+                        TextButton(
+                          onPressed: () => context.push('/leads/by-status'),
+                          child: Text(
+                            'View All',
                             style: TextStyle(
+                              color: const Color(0xFF3B82F6),
                               fontSize: 14.sp,
-                              color: const Color(0xFF666666),
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
-                        ],
+                        ),
+                      ],
+                    ),
+
+                    SizedBox(height: 12.h),
+
+                    // Recent Leads List
+                    Expanded(
+                      child: recentLeads.when(
+                        loading: () => const Center(child: CircularProgressIndicator()),
+                        error: (error, stack) => Center(
+                          child: Text(
+                            'Error loading leads',
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 14.sp,
+                            ),
+                          ),
+                        ),
+                        data: (leads) {
+                          final recentLeadsList = leads.take(3).toList();
+                          if (recentLeadsList.isEmpty) {
+                            return _EmptyLeadsCard();
+                          }
+                          return Column(
+                            children: recentLeadsList.map((lead) => _RecentLeadCard(lead: lead)).toList(),
+                          );
+                        },
                       ),
                     ),
                   ],
                 ),
               ),
-            ),
-
-            SizedBox(height: 24.h),
-
-            // Stats Overview
-            Text(
-              'Overview',
-              style: TextStyle(
-                fontSize: 18.sp,
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF333333),
-              ),
-            ),
-
-            SizedBox(height: 12.h),
-
-            Row(
-              children: [
-                Expanded(
-                  child: CompactStatsCard(
-                    title: 'Total Leads',
-                    value: '${stats['total'] ?? 0}',
-                    icon: Icons.people_outline,
-                    color: const Color(0xFF2196F3),
-                  ),
-                ),
-                Expanded(
-                  child: CompactStatsCard(
-                    title: 'Active',
-                    value: '${stats['active'] ?? 0}',
-                    icon: Icons.trending_up,
-                    color: const Color(0xFF4CAF50),
-                  ),
-                ),
-                Expanded(
-                  child: CompactStatsCard(
-                    title: 'Completed',
-                    value: '${stats['completed'] ?? 0}',
-                    icon: Icons.check_circle_outline,
-                    color: const Color(0xFFFF9800),
-                  ),
-                ),
-              ],
-            ),
-
-            SizedBox(height: 32.h),
-
-            // Navigation Buttons
-            Text(
-              'Browse Leads By',
-              style: TextStyle(
-                fontSize: 18.sp,
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF333333),
-              ),
-            ),
-
-            SizedBox(height: 16.h),
-
-            // Status Button
-            _NavigationCard(
-              title: 'Status',
-              subtitle: 'View leads by their current status',
-              icon: Icons.flag_outlined,
-              color: const Color(0xFFFF9800),
-              onTap: () => context.push('/leads/by-status'),
-            ),
-
-            SizedBox(height: 12.h),
-
-            // Project Button
-            _NavigationCard(
-              title: 'Project',
-              subtitle: 'Browse leads by project type',
-              icon: Icons.business_outlined,
-              color: const Color(0xFF4CAF50),
-              onTap: () => context.push('/leads/by-project'),
-            ),
-
-            SizedBox(height: 12.h),
-
-            // Source Button
-            _NavigationCard(
-              title: 'Source',
-              subtitle: 'Organize leads by their source',
-              icon: Icons.source_outlined,
-              color: const Color(0xFF2196F3),
-              onTap: () => context.push('/leads/by-source'),
-            ),
-
-            SizedBox(height: 32.h),
-
-            // Quick Actions
-            Text(
-              'Quick Actions',
-              style: TextStyle(
-                fontSize: 18.sp,
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF333333),
-              ),
-            ),
-
-            SizedBox(height: 16.h),
-
-            // Add Lead Button
-            CustomButton(
-              text: 'Add New Lead',
-              icon: Icons.add,
-              onPressed: () => context.push('/add-lead'),
             ),
           ],
         ),
@@ -220,15 +302,86 @@ class LeadsListScreen extends ConsumerWidget {
   }
 }
 
-// Navigation Card Widget
-class _NavigationCard extends StatelessWidget {
+// Premium Stats Card Widget
+class _PremiumStatsCard extends StatelessWidget {
+  final String title;
+  final String value;
+  final IconData icon;
+  final Color color;
+  final String trend;
+
+  const _PremiumStatsCard({
+    required this.title,
+    required this.value,
+    required this.icon,
+    required this.color,
+    required this.trend,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.all(16.w),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withOpacity(0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(6.w),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, color: color, size: 16.w),
+              ),
+              const Spacer(),
+              Text(
+                trend,
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.8),
+                  fontSize: 11.sp,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 12.h),
+          Text(
+            value,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 24.sp,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Text(
+            title,
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.8),
+              fontSize: 12.sp,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Premium Action Card Widget
+class _PremiumActionCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final IconData icon;
   final Color color;
   final VoidCallback onTap;
 
-  const _NavigationCard({
+  const _PremiumActionCard({
     required this.title,
     required this.subtitle,
     required this.icon,
@@ -238,56 +391,55 @@ class _NavigationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: EdgeInsets.all(20.w),
-          child: Row(
-            children: [
-              Container(
-                padding: EdgeInsets.all(12.w),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF1F2937).withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: EdgeInsets.all(20.w),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: EdgeInsets.all(12.w),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, color: color, size: 24.w),
                 ),
-                child: Icon(
-                  icon,
-                  color: color,
-                  size: 28.w,
+                SizedBox(height: 16.h),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF1F2937),
+                  ),
                 ),
-              ),
-              SizedBox(width: 16.w),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 18.sp,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF333333),
-                      ),
-                    ),
-                    SizedBox(height: 4.h),
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        color: const Color(0xFF666666),
-                      ),
-                    ),
-                  ],
+                SizedBox(height: 4.h),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 13.sp,
+                    color: const Color(0xFF6B7280),
+                  ),
                 ),
-              ),
-              Icon(
-                Icons.arrow_forward_ios,
-                color: const Color(0xFF999999),
-                size: 16.w,
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -295,7 +447,190 @@ class _NavigationCard extends StatelessWidget {
   }
 }
 
-// NEW: Leads by Status Screen
+// Recent Lead Card Widget
+class _RecentLeadCard extends StatelessWidget {
+  final LeadModel lead;
+
+  const _RecentLeadCard({required this.lead});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: EdgeInsets.only(bottom: 12.h),
+      padding: EdgeInsets.all(16.w),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF1F2937).withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: InkWell(
+        onTap: () => context.push('/lead/${lead.id}'),
+        child: Row(
+          children: [
+            Container(
+              width: 48.w,
+              height: 48.w,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    const Color(0xFF3B82F6).withOpacity(0.8),
+                    const Color(0xFF1E40AF),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Center(
+                child: Text(
+                  AppHelpers.initials(lead.name),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(width: 16.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    lead.name,
+                    style: TextStyle(
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF1F2937),
+                    ),
+                  ),
+                  SizedBox(height: 2.h),
+                  Text(
+                    AppHelpers.formatPhoneNumber(lead.phone),
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      color: const Color(0xFF6B7280),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                  decoration: BoxDecoration(
+                    color: _getStatusColor(lead.status).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    lead.status,
+                    style: TextStyle(
+                      fontSize: 11.sp,
+                      color: _getStatusColor(lead.status),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 4.h),
+                Text(
+                  AppHelpers.timeAgo(lead.updatedAt),
+                  style: TextStyle(
+                    fontSize: 11.sp,
+                    color: const Color(0xFF9CA3AF),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'untouched lead':
+        return const Color(0xFF3B82F6);
+      case 'site visit follow-up':
+        return const Color(0xFFF59E0B);
+      case 'site visit completed':
+        return const Color(0xFF10B981);
+      case 'not interested':
+        return const Color(0xFFEF4444);
+      default:
+        return const Color(0xFF6B7280);
+    }
+  }
+}
+
+// Empty Leads Card Widget
+class _EmptyLeadsCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.all(24.w),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: EdgeInsets.all(16.w),
+            decoration: BoxDecoration(
+              color: const Color(0xFF3B82F6).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              Icons.people_outline,
+              color: const Color(0xFF3B82F6),
+              size: 32.w,
+            ),
+          ),
+          SizedBox(height: 16.h),
+          Text(
+            'No leads yet',
+            style: TextStyle(
+              fontSize: 16.sp,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF1F2937),
+            ),
+          ),
+          SizedBox(height: 4.h),
+          Text(
+            'Start by adding your first lead',
+            style: TextStyle(
+              fontSize: 14.sp,
+              color: const Color(0xFF6B7280),
+            ),
+          ),
+          SizedBox(height: 16.h),
+          ElevatedButton(
+            onPressed: () => context.push('/add-lead'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF3B82F6),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text('Add Lead'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// NEW: Leads by Status Screen (List View)
 class LeadsByStatusScreen extends ConsumerStatefulWidget {
   const LeadsByStatusScreen({super.key});
 
@@ -323,14 +658,6 @@ class _LeadsByStatusScreenState extends ConsumerState<LeadsByStatusScreen> {
         ? leads
         : leads.where((lead) => lead.status == _selectedStatus).toList();
 
-    // Group by status
-    final groupedLeads = <String, List<LeadModel>>{};
-    for (final lead in filteredLeads) {
-      groupedLeads.putIfAbsent(lead.status, () => []).add(lead);
-    }
-    final sortedGroups = groupedLeads.entries.toList()
-      ..sort((a, b) => b.value.length.compareTo(a.value.length));
-
     return Scaffold(
       backgroundColor: const Color(0xFFFAFAFA),
       appBar: AppBar(
@@ -355,44 +682,51 @@ class _LeadsByStatusScreenState extends ConsumerState<LeadsByStatusScreen> {
 
           // Status Filter
           Container(
-            padding: EdgeInsets.symmetric(horizontal: 16.w),
+            margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
             child: statuses.when(
-              data: (statusList) => DropdownButtonFormField<String>(
-                decoration: const InputDecoration(
-                  labelText: 'Filter by Status',
-                  border: OutlineInputBorder(),
+              data: (statusList) => Container(
+                padding: EdgeInsets.symmetric(horizontal: 12.w),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFFE0E0E0)),
                 ),
-                value: _selectedStatus,
-                items: [
-                  const DropdownMenuItem(value: null, child: Text('All Statuses')),
-                  ...statusList.map((s) => DropdownMenuItem(value: s.name, child: Text(s.name))),
-                ],
-                onChanged: (value) => setState(() => _selectedStatus = value),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: _selectedStatus,
+                    hint: const Text('Filter by Status'),
+                    isExpanded: true,
+                    items: [
+                      const DropdownMenuItem<String>(
+                        value: null,
+                        child: Text('All Statuses'),
+                      ),
+                      ...statusList.map((status) => DropdownMenuItem<String>(
+                        value: status.name,
+                        child: Text(status.name),
+                      )),
+                    ],
+                    onChanged: (value) => setState(() => _selectedStatus = value),
+                  ),
+                ),
               ),
               loading: () => const CircularProgressIndicator(),
               error: (_, __) => const Text('Error loading statuses'),
             ),
           ),
 
-          SizedBox(height: 16.h),
-
-          // Grouped Leads
+          // Leads List
           Expanded(
-            child: sortedGroups.isEmpty
+            child: filteredLeads.isEmpty
                 ? const EmptyState(
               title: 'No leads found',
               subtitle: 'Try adjusting your search or filters',
               icon: Icons.people_outline,
             )
                 : ListView.builder(
-              itemCount: sortedGroups.length,
+              itemCount: filteredLeads.length,
               itemBuilder: (context, index) {
-                final group = sortedGroups[index];
-                return LeadGroupCard(
-                  groupName: group.key,
-                  leads: group.value,
-                  groupBy: LeadGroupBy.status,
-                );
+                return LeadListTile(lead: filteredLeads[index]);
               },
             ),
           ),
@@ -402,7 +736,7 @@ class _LeadsByStatusScreenState extends ConsumerState<LeadsByStatusScreen> {
   }
 }
 
-// NEW: Leads by Project Screen
+// NEW: Leads by Project Screen (List View)
 class LeadsByProjectScreen extends ConsumerStatefulWidget {
   const LeadsByProjectScreen({super.key});
 
@@ -430,14 +764,6 @@ class _LeadsByProjectScreenState extends ConsumerState<LeadsByProjectScreen> {
         ? leads
         : leads.where((lead) => lead.project == _selectedProject).toList();
 
-    // Group by project
-    final groupedLeads = <String, List<LeadModel>>{};
-    for (final lead in filteredLeads) {
-      groupedLeads.putIfAbsent(lead.project, () => []).add(lead);
-    }
-    final sortedGroups = groupedLeads.entries.toList()
-      ..sort((a, b) => b.value.length.compareTo(a.value.length));
-
     return Scaffold(
       backgroundColor: const Color(0xFFFAFAFA),
       appBar: AppBar(
@@ -462,44 +788,51 @@ class _LeadsByProjectScreenState extends ConsumerState<LeadsByProjectScreen> {
 
           // Project Filter
           Container(
-            padding: EdgeInsets.symmetric(horizontal: 16.w),
+            margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
             child: projects.when(
-              data: (projectList) => DropdownButtonFormField<String>(
-                decoration: const InputDecoration(
-                  labelText: 'Filter by Project',
-                  border: OutlineInputBorder(),
+              data: (projectList) => Container(
+                padding: EdgeInsets.symmetric(horizontal: 12.w),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFFE0E0E0)),
                 ),
-                value: _selectedProject,
-                items: [
-                  const DropdownMenuItem(value: null, child: Text('All Projects')),
-                  ...projectList.map((p) => DropdownMenuItem(value: p.name, child: Text(p.name))),
-                ],
-                onChanged: (value) => setState(() => _selectedProject = value),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: _selectedProject,
+                    hint: const Text('Filter by Project'),
+                    isExpanded: true,
+                    items: [
+                      const DropdownMenuItem<String>(
+                        value: null,
+                        child: Text('All Projects'),
+                      ),
+                      ...projectList.map((project) => DropdownMenuItem<String>(
+                        value: project.name,
+                        child: Text(project.name),
+                      )),
+                    ],
+                    onChanged: (value) => setState(() => _selectedProject = value),
+                  ),
+                ),
               ),
               loading: () => const CircularProgressIndicator(),
               error: (_, __) => const Text('Error loading projects'),
             ),
           ),
 
-          SizedBox(height: 16.h),
-
-          // Grouped Leads
+          // Leads List
           Expanded(
-            child: sortedGroups.isEmpty
+            child: filteredLeads.isEmpty
                 ? const EmptyState(
               title: 'No leads found',
               subtitle: 'Try adjusting your search or filters',
               icon: Icons.people_outline,
             )
                 : ListView.builder(
-              itemCount: sortedGroups.length,
+              itemCount: filteredLeads.length,
               itemBuilder: (context, index) {
-                final group = sortedGroups[index];
-                return LeadGroupCard(
-                  groupName: group.key,
-                  leads: group.value,
-                  groupBy: LeadGroupBy.project,
-                );
+                return LeadListTile(lead: filteredLeads[index]);
               },
             ),
           ),
@@ -509,7 +842,7 @@ class _LeadsByProjectScreenState extends ConsumerState<LeadsByProjectScreen> {
   }
 }
 
-// NEW: Leads by Source Screen
+// NEW: Leads by Source Screen (List View)
 class LeadsBySourceScreen extends ConsumerStatefulWidget {
   const LeadsBySourceScreen({super.key});
 
@@ -537,14 +870,6 @@ class _LeadsBySourceScreenState extends ConsumerState<LeadsBySourceScreen> {
         ? leads
         : leads.where((lead) => lead.source == _selectedSource).toList();
 
-    // Group by source
-    final groupedLeads = <String, List<LeadModel>>{};
-    for (final lead in filteredLeads) {
-      groupedLeads.putIfAbsent(lead.source, () => []).add(lead);
-    }
-    final sortedGroups = groupedLeads.entries.toList()
-      ..sort((a, b) => b.value.length.compareTo(a.value.length));
-
     return Scaffold(
       backgroundColor: const Color(0xFFFAFAFA),
       appBar: AppBar(
@@ -569,44 +894,51 @@ class _LeadsBySourceScreenState extends ConsumerState<LeadsBySourceScreen> {
 
           // Source Filter
           Container(
-            padding: EdgeInsets.symmetric(horizontal: 16.w),
+            margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
             child: sources.when(
-              data: (sourceList) => DropdownButtonFormField<String>(
-                decoration: const InputDecoration(
-                  labelText: 'Filter by Source',
-                  border: OutlineInputBorder(),
+              data: (sourceList) => Container(
+                padding: EdgeInsets.symmetric(horizontal: 12.w),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFFE0E0E0)),
                 ),
-                value: _selectedSource,
-                items: [
-                  const DropdownMenuItem(value: null, child: Text('All Sources')),
-                  ...sourceList.map((s) => DropdownMenuItem(value: s.name, child: Text(s.name))),
-                ],
-                onChanged: (value) => setState(() => _selectedSource = value),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: _selectedSource,
+                    hint: const Text('Filter by Source'),
+                    isExpanded: true,
+                    items: [
+                      const DropdownMenuItem<String>(
+                        value: null,
+                        child: Text('All Sources'),
+                      ),
+                      ...sourceList.map((source) => DropdownMenuItem<String>(
+                        value: source.name,
+                        child: Text(source.name),
+                      )),
+                    ],
+                    onChanged: (value) => setState(() => _selectedSource = value),
+                  ),
+                ),
               ),
               loading: () => const CircularProgressIndicator(),
               error: (_, __) => const Text('Error loading sources'),
             ),
           ),
 
-          SizedBox(height: 16.h),
-
-          // Grouped Leads
+          // Leads List
           Expanded(
-            child: sortedGroups.isEmpty
+            child: filteredLeads.isEmpty
                 ? const EmptyState(
               title: 'No leads found',
               subtitle: 'Try adjusting your search or filters',
               icon: Icons.people_outline,
             )
                 : ListView.builder(
-              itemCount: sortedGroups.length,
+              itemCount: filteredLeads.length,
               itemBuilder: (context, index) {
-                final group = sortedGroups[index];
-                return LeadGroupCard(
-                  groupName: group.key,
-                  leads: group.value,
-                  groupBy: LeadGroupBy.source,
-                );
+                return LeadListTile(lead: filteredLeads[index]);
               },
             ),
           ),
@@ -616,121 +948,146 @@ class _LeadsBySourceScreenState extends ConsumerState<LeadsBySourceScreen> {
   }
 }
 
-// Lead Group Card Widget
-class LeadGroupCard extends StatefulWidget {
-  final String groupName;
-  final List<LeadModel> leads;
-  final LeadGroupBy groupBy;
+// NEW: Lead List Tile Widget (Clean List Item)
+class LeadListTile extends ConsumerWidget {
+  final LeadModel lead;
 
-  const LeadGroupCard({
-    super.key,
-    required this.groupName,
-    required this.leads,
-    required this.groupBy,
-  });
+  const LeadListTile({super.key, required this.lead});
 
   @override
-  State<LeadGroupCard> createState() => _LeadGroupCardState();
-}
-
-class _LeadGroupCardState extends State<LeadGroupCard> {
-  bool _isExpanded = true;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-      child: Column(
-        children: [
-          // Group Header
-          InkWell(
-            onTap: () {
-              setState(() {
-                _isExpanded = !_isExpanded;
-              });
-            },
-            child: Padding(
-              padding: EdgeInsets.all(16.w),
-              child: Row(
-                children: [
-                  Container(
-                    padding: EdgeInsets.all(8.w),
-                    decoration: BoxDecoration(
-                      color: _getGroupColor(widget.groupBy).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(
-                      _getGroupIcon(widget.groupBy),
-                      color: _getGroupColor(widget.groupBy),
-                      size: 20.w,
-                    ),
-                  ),
-                  SizedBox(width: 12.w),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.groupName,
-                          style: TextStyle(
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF333333),
-                          ),
-                        ),
-                        Text(
-                          '${widget.leads.length} lead${widget.leads.length != 1 ? 's' : ''}',
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            color: const Color(0xFF666666),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Icon(
-                    _isExpanded ? Icons.expand_less : Icons.expand_more,
-                    color: const Color(0xFF666666),
-                  ),
-                ],
-              ),
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFE0E0E0)),
+      ),
+      child: ListTile(
+        onTap: () => context.push('/lead/${lead.id}'),
+        leading: CircleAvatar(
+          radius: 20.w,
+          backgroundColor: const Color(0xFFE60023).withOpacity(0.1),
+          child: Text(
+            AppHelpers.initials(lead.name),
+            style: TextStyle(
+              color: const Color(0xFFE60023),
+              fontSize: 14.sp,
+              fontWeight: FontWeight.w600,
             ),
           ),
-
-          // Group Content
-          if (_isExpanded)
-            Column(
-              children: widget.leads.map((lead) => CompactLeadCard(lead: lead)).toList(),
+        ),
+        title: Text(
+          lead.name,
+          style: TextStyle(
+            fontSize: 16.sp,
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFF333333),
+          ),
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              AppHelpers.formatPhoneNumber(lead.phone),
+              style: TextStyle(
+                fontSize: 14.sp,
+                color: const Color(0xFF666666),
+              ),
             ),
-        ],
+            SizedBox(height: 4.h),
+            Row(
+              children: [
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                  decoration: BoxDecoration(
+                    color: _getStatusColor(lead.status).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    lead.status,
+                    style: TextStyle(
+                      fontSize: 10.sp,
+                      color: _getStatusColor(lead.status),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                SizedBox(width: 8.w),
+                Text(
+                  '• ${AppHelpers.timeAgo(lead.updatedAt)}',
+                  style: TextStyle(
+                    fontSize: 11.sp,
+                    color: const Color(0xFF999999),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Call Button
+            Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFFE60023).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: IconButton(
+                icon: Icon(Icons.call, size: 18.w, color: const Color(0xFFE60023)),
+                onPressed: () async {
+                  final success = await CallService.makeCall(lead.phone);
+                  if (success && context.mounted) {
+                    showDialog(
+                      context: context,
+                      builder: (context) => CallOutcomeDialog(
+                        leadId: lead.id,
+                        leadName: lead.name,
+                      ),
+                    );
+                  }
+                },
+                constraints: BoxConstraints(minWidth: 36.w, minHeight: 36.w),
+                padding: EdgeInsets.all(6.w),
+              ),
+            ),
+
+            // Follow-up indicator
+            if (lead.followUp != null) ...[
+              SizedBox(width: 8.w),
+              Icon(
+                Icons.schedule,
+                size: 16.w,
+                color: lead.followUp!.isBefore(DateTime.now())
+                    ? const Color(0xFFE53935)
+                    : const Color(0xFF4CAF50),
+              ),
+            ],
+          ],
+        ),
+        contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
       ),
     );
   }
 
-  Color _getGroupColor(LeadGroupBy groupBy) {
-    switch (groupBy) {
-      case LeadGroupBy.source:
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'untouched lead':
         return const Color(0xFF2196F3);
-      case LeadGroupBy.status:
+      case 'site visit follow-up':
         return const Color(0xFFFF9800);
-      case LeadGroupBy.project:
+      case 'site visit completed':
         return const Color(0xFF4CAF50);
-    }
-  }
-
-  IconData _getGroupIcon(LeadGroupBy groupBy) {
-    switch (groupBy) {
-      case LeadGroupBy.source:
-        return Icons.source_outlined;
-      case LeadGroupBy.status:
-        return Icons.flag_outlined;
-      case LeadGroupBy.project:
-        return Icons.business_outlined;
+      case 'not interested':
+        return const Color(0xFFE53935);
+      default:
+        return const Color(0xFF9E9E9E);
     }
   }
 }
 
-// Lead Detail Screen - Updated to work with new string-based status
+// Lead Detail Screen - Keep existing implementation
 class LeadDetailScreen extends ConsumerWidget {
   final String leadId;
 

@@ -167,7 +167,7 @@ class CustomTextField extends StatelessWidget {
   }
 }
 
-// Custom Dropdown Widget
+// FIXED Custom Dropdown Widget
 class CustomDropdown<T> extends StatelessWidget {
   final String label;
   final T? value;
@@ -188,6 +188,18 @@ class CustomDropdown<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Remove duplicates and ensure unique items
+    final uniqueItems = <T>[];
+    final seen = <String>{};
+
+    for (final item in items) {
+      final displayText = getDisplayText(item);
+      if (!seen.contains(displayText)) {
+        seen.add(displayText);
+        uniqueItems.add(item);
+      }
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -221,7 +233,7 @@ class CustomDropdown<T> extends StatelessWidget {
             fillColor: Colors.white,
             contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
           ),
-          items: items.map((item) {
+          items: uniqueItems.map((item) {
             return DropdownMenuItem<T>(
               value: item,
               child: Text(
@@ -239,145 +251,9 @@ class CustomDropdown<T> extends StatelessWidget {
   }
 }
 
-// Compact Lead Card Widget - NEW
-class CompactLeadCard extends ConsumerWidget {
-  final LeadModel lead;
+// Compact Lead Card Widget - REMOVED (replaced with LeadListTile)
 
-  const CompactLeadCard({super.key, required this.lead});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
-      child: InkWell(
-        onTap: () => context.push('/lead/${lead.id}'),
-        borderRadius: BorderRadius.circular(8),
-        child: Container(
-          padding: EdgeInsets.all(12.w),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: const Color(0xFFE0E0E0)),
-          ),
-          child: Row(
-            children: [
-              // Lead Avatar
-              CircleAvatar(
-                radius: 20.w,
-                backgroundColor: const Color(0xFFE60023).withOpacity(0.1),
-                child: Text(
-                  AppHelpers.initials(lead.name),
-                  style: TextStyle(
-                    color: const Color(0xFFE60023),
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-
-              SizedBox(width: 12.w),
-
-              // Lead Info
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      lead.name,
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF333333),
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    SizedBox(height: 2.h),
-                    Text(
-                      AppHelpers.formatPhoneNumber(lead.phone),
-                      style: TextStyle(
-                        fontSize: 13.sp,
-                        color: const Color(0xFF666666),
-                      ),
-                    ),
-                    SizedBox(height: 4.h),
-                    Row(
-                      children: [
-                        Icon(Icons.access_time, size: 12.w, color: const Color(0xFF999999)),
-                        SizedBox(width: 4.w),
-                        Text(
-                          AppHelpers.timeAgo(lead.updatedAt),
-                          style: TextStyle(
-                            fontSize: 11.sp,
-                            color: const Color(0xFF999999),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-
-              // Actions
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Call Button
-                  Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE60023).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: IconButton(
-                      icon: Icon(Icons.call, size: 16.w, color: const Color(0xFFE60023)),
-                      onPressed: () async {
-                        final success = await CallService.makeCall(lead.phone);
-                        if (success && context.mounted) {
-                          showDialog(
-                            context: context,
-                            builder: (context) => CallOutcomeDialog(
-                              leadId: lead.id,
-                              leadName: lead.name,
-                            ),
-                          );
-                        }
-                      },
-                      constraints: BoxConstraints(minWidth: 32.w, minHeight: 32.w),
-                      padding: EdgeInsets.all(4.w),
-                    ),
-                  ),
-
-                  SizedBox(width: 8.w),
-
-                  // Follow-up indicator
-                  if (lead.followUp != null)
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
-                      decoration: BoxDecoration(
-                        color: lead.followUp!.isBefore(DateTime.now())
-                            ? const Color(0xFFFFEBEE)
-                            : const Color(0xFFE8F5E8),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(
-                        Icons.schedule,
-                        size: 12.w,
-                        color: lead.followUp!.isBefore(DateTime.now())
-                            ? const Color(0xFFE53935)
-                            : const Color(0xFF4CAF50),
-                      ),
-                    ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// Compact Stats Card Widget - NEW
+// Compact Stats Card Widget
 class CompactStatsCard extends StatelessWidget {
   final String title;
   final String value;
@@ -435,7 +311,7 @@ class CompactStatsCard extends StatelessWidget {
   }
 }
 
-// Custom Status Chip Widget - NEW (for string-based status)
+// Custom Status Chip Widget
 class CustomStatusChip extends StatelessWidget {
   final String status;
 
