@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "586591854546",
+    "project_id": "boringcrm-6418a",
+    "storage_bucket": "boringcrm-6418a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:586591854546:android:d4dd4aee1fcfa5834a720b",
+        "android_client_info": {
+          "package_name": "com.boringcrm.simpleleadcrm"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAg366X9mUZQ5k-aEK-1h43LVg-x5Xssc4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
