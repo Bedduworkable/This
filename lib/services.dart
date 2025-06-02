@@ -10,13 +10,9 @@ class AuthService {
   static final FirebaseAuth _auth = FirebaseAuth.instance;
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // Get current user
   static User? get currentUser => _auth.currentUser;
-
-  // Auth state stream
   static Stream<User?> get authStateChanges => _auth.authStateChanges();
 
-  // Sign up with email and password
   static Future<UserCredential?> signUp({
     required String email,
     required String password,
@@ -27,9 +23,9 @@ class AuthService {
         password: password,
       );
 
-      // Create user document in Firestore
       if (credential.user != null) {
         await _createUserDocument(credential.user!);
+        await _initializeDefaultCustomFields();
       }
 
       return credential;
@@ -38,7 +34,6 @@ class AuthService {
     }
   }
 
-  // Sign in with email and password
   static Future<UserCredential?> signIn({
     required String email,
     required String password,
@@ -49,9 +44,9 @@ class AuthService {
         password: password,
       );
 
-      // Update FCM token
       if (credential.user != null) {
         await _updateFCMToken(credential.user!.uid);
+        await _initializeDefaultCustomFields();
       }
 
       return credential;
@@ -60,7 +55,6 @@ class AuthService {
     }
   }
 
-  // Send password reset email
   static Future<void> sendPasswordResetEmail(String email) async {
     try {
       await _auth.sendPasswordResetEmail(email: email);
@@ -69,18 +63,16 @@ class AuthService {
     }
   }
 
-  // Sign out
   static Future<void> signOut() async {
     await _auth.signOut();
   }
 
-  // Create user document in Firestore
   static Future<void> _createUserDocument(User user) async {
     final userModel = UserModel(
       id: user.uid,
       email: user.email!,
       createdAt: DateTime.now(),
-      isAdmin: false, // Default to false, can be changed manually in Firestore
+      isAdmin: false,
     );
 
     await _firestore
@@ -89,7 +81,6 @@ class AuthService {
         .set(userModel.toFirestore());
   }
 
-  // Update FCM token
   static Future<void> _updateFCMToken(String userId) async {
     try {
       final fcmToken = await FirebaseMessaging.instance.getToken();
@@ -103,7 +94,6 @@ class AuthService {
     }
   }
 
-  // Get user data
   static Future<UserModel?> getUserData(String userId) async {
     try {
       final doc = await _firestore.collection('users').doc(userId).get();
@@ -115,20 +105,110 @@ class AuthService {
     }
     return null;
   }
+
+  // Initialize default custom fields - NEW
+  static Future<void> _initializeDefaultCustomFields() async {
+    try {
+      // Check if fields already exist
+      final existingSources = await _firestore
+          .collection('custom_fields')
+          .where('type', isEqualTo: 'source')
+          .limit(1)
+          .get();
+
+      if (existingSources.docs.isEmpty) {
+        // Create default sources
+        final defaultSources = ['Facebook', 'Google', 'Reference', 'Other'];
+        for (final source in defaultSources) {
+          final field = CustomFieldModel(
+            id: '',
+            name: source,
+            type: CustomFieldType.source,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          );
+          await _firestore.collection('custom_fields').add(field.toFirestore());
+        }
+
+        // Create default projects
+        final defaultProjects = ['Villas', 'Apartments', 'Open Plots', 'Investment'];
+        for (final project in defaultProjects) {
+          final field = CustomFieldModel(
+            id: '',
+            name: project,
+            type: CustomFieldType.project,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          );
+          await _firestore.collection('custom_fields').add(field.toFirestore());
+        }
+
+        // Create default statuses
+        final defaultStatuses = [
+          'Untouched Lead',
+          'Site Visit Follow-up',
+          'Site Visit Completed',
+          'Not Interested'
+        ];
+        for (final status in defaultStatuses) {
+          final field = CustomFieldModel(
+            id: '',
+            name: status,
+            type: CustomFieldType.status,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          );
+          await _firestore.collection('custom_fields').add(field.toFirestore());
+        }
+      }
+    } catch (e) {
+      AppHelpers.debugLog('Error initializing default custom fields: $e');
+    }
+  }
 }
 
 // Firestore Service
 class FirestoreService {
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  // CUSTOM FIELDS OPERATIONS - NEW
+
+  static Stream<List<CustomFieldModel>> getCustomFields(CustomFieldType type) {
+    return _firestore
+        .collection('custom_fields')
+        .where('type', isEqualTo: type.name)
+        .orderBy('createdAt')
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+        .map((doc) => CustomFieldModel.fromFirestore(doc))
+        .toList());
+  }
+
+  static Future<void> createCustomField(CustomFieldModel field) async {
+    try {
+      await _firestore.collection('custom_fields').add(field.toFirestore());
+    } catch (e) {
+      throw Exception('Failed to create custom field: $e');
+    }
+  }
+
+  static Future<void> updateCustomField(String fieldId, String newName) async {
+    try {
+      await _firestore.collection('custom_fields').doc(fieldId).update({
+        'name': newName,
+        'updatedAt': Timestamp.fromDate(DateTime.now()),
+      });
+    } catch (e) {
+      throw Exception('Failed to update custom field: $e');
+    }
+  }
+
   // LEADS OPERATIONS
 
-  // Create lead
   static Future<String> createLead(LeadModel lead) async {
     try {
       final docRef = await _firestore.collection('leads').add(lead.toFirestore());
 
-      // Create activity log for lead creation
       await _createActivityLog(
         ActivityLogModel.leadCreated(
           leadId: docRef.id,
@@ -143,42 +223,42 @@ class FirestoreService {
     }
   }
 
-  // Update lead
   static Future<void> updateLead(String leadId, LeadModel oldLead, LeadModel newLead) async {
     try {
       await _firestore.collection('leads').doc(leadId).update(newLead.toFirestore());
-
-      // Log field changes
       await _logFieldChanges(leadId, oldLead, newLead);
     } catch (e) {
       throw Exception('Failed to update lead: $e');
     }
   }
 
-  // Get user's leads
   static Stream<List<LeadModel>> getUserLeads(String userId) {
     return _firestore
         .collection('leads')
         .where('userId', isEqualTo: userId)
-        .orderBy('updatedAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-        .map((doc) => LeadModel.fromFirestore(doc))
-        .toList());
+        .map((snapshot) {
+      final leads = snapshot.docs
+          .map((doc) => LeadModel.fromFirestore(doc))
+          .toList();
+      leads.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+      return leads;
+    });
   }
 
-  // Get all leads (admin only)
   static Stream<List<LeadModel>> getAllLeads() {
     return _firestore
         .collection('leads')
-        .orderBy('updatedAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-        .map((doc) => LeadModel.fromFirestore(doc))
-        .toList());
+        .map((snapshot) {
+      final leads = snapshot.docs
+          .map((doc) => LeadModel.fromFirestore(doc))
+          .toList();
+      leads.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+      return leads;
+    });
   }
 
-  // Get single lead
   static Future<LeadModel?> getLead(String leadId) async {
     try {
       final doc = await _firestore.collection('leads').doc(leadId).get();
@@ -193,7 +273,6 @@ class FirestoreService {
 
   // ACTIVITY LOG OPERATIONS
 
-  // Create activity log
   static Future<void> _createActivityLog(ActivityLogModel log) async {
     try {
       await _firestore
@@ -206,24 +285,24 @@ class FirestoreService {
     }
   }
 
-  // Get activity logs for a lead
   static Stream<List<ActivityLogModel>> getActivityLogs(String leadId) {
     return _firestore
         .collection('leads')
         .doc(leadId)
         .collection('activity_logs')
-        .orderBy('timestamp', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-        .map((doc) => ActivityLogModel.fromFirestore(doc))
-        .toList());
+        .map((snapshot) {
+      final logs = snapshot.docs
+          .map((doc) => ActivityLogModel.fromFirestore(doc))
+          .toList();
+      logs.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+      return logs;
+    });
   }
 
-  // Log field changes
   static Future<void> _logFieldChanges(String leadId, LeadModel oldLead, LeadModel newLead) async {
     final String userId = AuthService.currentUser?.uid ?? '';
 
-    // Check each field for changes
     if (oldLead.name != newLead.name) {
       await _createActivityLog(ActivityLogModel.fieldUpdated(
         leadId: leadId,
@@ -302,7 +381,6 @@ class FirestoreService {
     }
   }
 
-  // Log call activity
   static Future<void> logCallActivity({
     required String leadId,
     required String outcome,
@@ -320,7 +398,6 @@ class FirestoreService {
 
   // NOTIFICATION OPERATIONS
 
-  // Create notification
   static Future<void> createNotification(NotificationModel notification) async {
     try {
       await _firestore
@@ -331,21 +408,22 @@ class FirestoreService {
     }
   }
 
-  // Get user notifications
   static Stream<List<NotificationModel>> getUserNotifications(String userId) {
     return _firestore
         .collection('notifications')
         .where('userId', isEqualTo: userId)
-        .orderBy('sentAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-        .map((doc) => NotificationModel.fromFirestore(doc))
-        .toList());
+        .map((snapshot) {
+      final notifications = snapshot.docs
+          .map((doc) => NotificationModel.fromFirestore(doc))
+          .toList();
+      notifications.sort((a, b) => b.sentAt.compareTo(a.sentAt));
+      return notifications;
+    });
   }
 
   // USER OPERATIONS
 
-  // Get all users (admin only)
   static Future<List<UserModel>> getAllUsers() async {
     try {
       final snapshot = await _firestore.collection('users').get();
@@ -357,7 +435,6 @@ class FirestoreService {
     }
   }
 
-  // Check if user is admin
   static Future<bool> isUserAdmin(String userId) async {
     try {
       final doc = await _firestore.collection('users').doc(userId).get();
@@ -376,35 +453,25 @@ class FirestoreService {
 class NotificationService {
   static final FirebaseMessaging _messaging = FirebaseMessaging.instance;
 
-  // Initialize notifications
   static Future<void> initialize() async {
-    // Request permission
     await _messaging.requestPermission(
       alert: true,
       badge: true,
       sound: true,
     );
 
-    // Handle foreground messages
     FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
-
-    // Handle background messages
     FirebaseMessaging.onMessageOpenedApp.listen(_handleBackgroundMessage);
   }
 
-  // Handle foreground messages
   static void _handleForegroundMessage(RemoteMessage message) {
     AppHelpers.debugLog('Foreground message: ${message.notification?.title}');
-    // You can show in-app notification here
   }
 
-  // Handle background messages
   static void _handleBackgroundMessage(RemoteMessage message) {
     AppHelpers.debugLog('Background message: ${message.notification?.title}');
-    // Handle navigation or other actions
   }
 
-  // Get FCM token
   static Future<String?> getToken() async {
     return await _messaging.getToken();
   }
@@ -412,7 +479,6 @@ class NotificationService {
 
 // Call Service
 class CallService {
-  // Make phone call
   static Future<bool> makeCall(String phoneNumber) async {
     try {
       final url = AppHelpers.getCallUrl(phoneNumber);
@@ -429,7 +495,6 @@ class CallService {
     }
   }
 
-  // Send email
   static Future<bool> sendEmail(String email) async {
     try {
       final url = AppHelpers.getEmailUrl(email);

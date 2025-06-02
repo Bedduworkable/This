@@ -139,27 +139,27 @@ class AdminDashboard extends ConsumerWidget {
               mainAxisSpacing: 12.w,
               crossAxisSpacing: 12.w,
               children: [
-                StatsCard(
+                CompactStatsCard(
                   title: 'Total Leads',
                   value: '${stats['total'] ?? 0}',
                   icon: Icons.people_outline,
                   color: const Color(0xFF2196F3),
                 ),
-                StatsCard(
-                  title: 'New Leads',
-                  value: '${stats['new_lead'] ?? 0}',
-                  icon: Icons.fiber_new,
-                  color: const Color(0xFF9C27B0),
-                ),
-                StatsCard(
-                  title: 'Won Deals',
-                  value: '${stats['closed_won'] ?? 0}',
-                  icon: Icons.check_circle_outline,
+                CompactStatsCard(
+                  title: 'Active Leads',
+                  value: '${stats['active'] ?? 0}',
+                  icon: Icons.trending_up,
                   color: const Color(0xFF4CAF50),
                 ),
-                StatsCard(
-                  title: 'Lost Deals',
-                  value: '${stats['closed_lost'] ?? 0}',
+                CompactStatsCard(
+                  title: 'Completed',
+                  value: '${stats['completed'] ?? 0}',
+                  icon: Icons.check_circle_outline,
+                  color: const Color(0xFFFF9800),
+                ),
+                CompactStatsCard(
+                  title: 'Not Interested',
+                  value: '${stats['Not Interested'] ?? 0}',
                   icon: Icons.cancel_outlined,
                   color: const Color(0xFFE53935),
                 ),
@@ -356,34 +356,26 @@ class _AdminLeadsScreenState extends ConsumerState<AdminLeadsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final leads = ref.watch(filteredAllLeadsProvider);
-    final statusFilter = ref.watch(statusFilterProvider);
+    final allLeads = ref.watch(allLeadsProvider);
+    final searchQuery = ref.watch(searchQueryProvider);
+
+    // Filter leads based on search
+    final filteredLeads = allLeads.when(
+      data: (leads) {
+        if (searchQuery.isEmpty) return leads;
+        return leads.where((lead) {
+          final searchText = '${lead.name} ${lead.phone} ${lead.email} ${lead.source} ${lead.project} ${lead.status}'.toLowerCase();
+          return searchText.contains(searchQuery.toLowerCase());
+        }).toList();
+      },
+      loading: () => <LeadModel>[],
+      error: (_, __) => <LeadModel>[],
+    );
 
     return Scaffold(
       backgroundColor: const Color(0xFFFAFAFA),
       appBar: AppBar(
         title: const Text('All Leads'),
-        actions: [
-          PopupMenuButton<LeadStatus?>(
-            icon: Icon(
-              Icons.filter_list,
-              color: statusFilter != null ? const Color(0xFFE60023) : const Color(0xFF666666),
-            ),
-            onSelected: (status) {
-              ref.read(statusFilterProvider.notifier).state = status;
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: null,
-                child: Text('All Leads'),
-              ),
-              ...LeadStatus.values.map((status) => PopupMenuItem(
-                value: status,
-                child: Text(status.displayName),
-              )),
-            ],
-          ),
-        ],
       ),
       body: Column(
         children: [
@@ -396,72 +388,69 @@ class _AdminLeadsScreenState extends ConsumerState<AdminLeadsScreen> {
             hint: 'Search all leads...',
           ),
 
-          // Status Filter Chips
-          if (statusFilter != null)
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 16.w),
-              child: Row(
-                children: [
-                  Chip(
-                    label: Text(statusFilter.displayName),
-                    onDeleted: () {
-                      ref.read(statusFilterProvider.notifier).state = null;
-                    },
-                    deleteIcon: const Icon(Icons.close, size: 16),
-                  ),
-                ],
-              ),
-            ),
-
           // Quick Stats
           Container(
             padding: EdgeInsets.all(16.w),
-            child: Row(
-              children: [
-                Expanded(
-                  child: StatsCard(
-                    title: 'Total',
-                    value: '${leads.length}',
-                    icon: Icons.people_outline,
-                    color: const Color(0xFF2196F3),
+            child: allLeads.when(
+              data: (leads) => Row(
+                children: [
+                  Expanded(
+                    child: CompactStatsCard(
+                      title: 'Total',
+                      value: '${leads.length}',
+                      icon: Icons.people_outline,
+                      color: const Color(0xFF2196F3),
+                    ),
                   ),
-                ),
-                Expanded(
-                  child: StatsCard(
-                    title: 'Active',
-                    value: '${leads.where((l) => l.status != LeadStatus.closed_won && l.status != LeadStatus.closed_lost).length}',
-                    icon: Icons.trending_up,
-                    color: const Color(0xFF4CAF50),
+                  Expanded(
+                    child: CompactStatsCard(
+                      title: 'Active',
+                      value: '${leads.where((l) => !['Site Visit Completed', 'Not Interested'].contains(l.status)).length}',
+                      icon: Icons.trending_up,
+                      color: const Color(0xFF4CAF50),
+                    ),
                   ),
-                ),
-                Expanded(
-                  child: StatsCard(
-                    title: 'Closed',
-                    value: '${leads.where((l) => l.status == LeadStatus.closed_won || l.status == LeadStatus.closed_lost).length}',
-                    icon: Icons.done_all,
-                    color: const Color(0xFF9C27B0),
+                  Expanded(
+                    child: CompactStatsCard(
+                      title: 'Closed',
+                      value: '${leads.where((l) => ['Site Visit Completed', 'Not Interested'].contains(l.status)).length}',
+                      icon: Icons.done_all,
+                      color: const Color(0xFF9C27B0),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
+              loading: () => const SizedBox(),
+              error: (_, __) => const SizedBox(),
             ),
           ),
 
           // Leads List
           Expanded(
-            child: leads.isEmpty
-                ? EmptyState(
-              title: 'No leads found',
-              subtitle: _searchController.text.isNotEmpty
-                  ? 'Try adjusting your search or filters'
-                  : 'No leads in the system yet',
-              icon: Icons.people_outline,
-            )
-                : ListView.builder(
-              itemCount: leads.length,
-              itemBuilder: (context, index) {
-                return LeadCard(
-                  lead: leads[index],
-                  showUser: true,
+            child: allLeads.when(
+              loading: () => const LoadingWidget(message: 'Loading leads...'),
+              error: (error, stack) => CustomErrorWidget(
+                message: error.toString(),
+                onRetry: () => ref.refresh(allLeadsProvider),
+              ),
+              data: (leads) {
+                final displayLeads = searchQuery.isEmpty ? leads : filteredLeads;
+
+                if (displayLeads.isEmpty) {
+                  return EmptyState(
+                    title: 'No leads found',
+                    subtitle: searchQuery.isNotEmpty
+                        ? 'Try adjusting your search'
+                        : 'No leads in the system yet',
+                    icon: Icons.people_outline,
+                  );
+                }
+
+                return ListView.builder(
+                  itemCount: displayLeads.length,
+                  itemBuilder: (context, index) {
+                    return CompactLeadCard(lead: displayLeads[index]);
+                  },
                 );
               },
             ),

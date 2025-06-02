@@ -52,34 +52,8 @@ class Validators {
   }
 }
 
-// App Constants
+// App Constants - Updated (removed dynamic fields)
 class AppConstants {
-  // Lead Sources
-  static const List<String> leadSources = [
-    'Website',
-    'Social Media',
-    'Referral',
-    'Advertisement',
-    'Cold Call',
-    'Walk-in',
-    'Email Campaign',
-    'WhatsApp',
-    'Other',
-  ];
-
-  // Projects/Properties
-  static const List<String> projects = [
-    'Project Alpha',
-    'Project Beta',
-    'Project Gamma',
-    'Luxury Villas',
-    'Commercial Plaza',
-    'Residential Towers',
-    'Office Complex',
-    'Shopping Mall',
-    'Other',
-  ];
-
   // Call Outcomes
   static const List<String> callOutcomes = [
     'Interested',
@@ -174,22 +148,14 @@ class AppHelpers {
   // Color Utilities
   static String getStatusColor(String status) {
     switch (status.toLowerCase()) {
-      case 'new lead':
+      case 'untouched lead':
         return '#2196F3'; // Blue
-      case 'contacted':
+      case 'site visit follow-up':
         return '#FF9800'; // Orange
-      case 'qualified':
-        return '#9C27B0'; // Purple
-      case 'proposal sent':
-        return '#00BCD4'; // Cyan
-      case 'negotiation':
-        return '#FFC107'; // Amber
-      case 'closed won':
+      case 'site visit completed':
         return '#4CAF50'; // Green
-      case 'closed lost':
+      case 'not interested':
         return '#F44336'; // Red
-      case 'follow up':
-        return '#607D8B'; // Blue Grey
       default:
         return '#9E9E9E'; // Grey
     }

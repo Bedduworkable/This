@@ -37,7 +37,70 @@ class UserModel {
   }
 }
 
-// Lead Model
+// Custom Field Model - NEW
+class CustomFieldModel {
+  final String id;
+  final String name;
+  final CustomFieldType type;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  CustomFieldModel({
+    required this.id,
+    required this.name,
+    required this.type,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  factory CustomFieldModel.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    return CustomFieldModel(
+      id: doc.id,
+      name: data['name'] ?? '',
+      type: CustomFieldType.values.firstWhere(
+            (e) => e.name == data['type'],
+        orElse: () => CustomFieldType.source,
+      ),
+      createdAt: (data['createdAt'] as Timestamp).toDate(),
+      updatedAt: (data['updatedAt'] as Timestamp).toDate(),
+    );
+  }
+
+  Map<String, dynamic> toFirestore() {
+    return {
+      'name': name,
+      'type': type.name,
+      'createdAt': Timestamp.fromDate(createdAt),
+      'updatedAt': Timestamp.fromDate(updatedAt),
+    };
+  }
+
+  CustomFieldModel copyWith({
+    String? name,
+    DateTime? updatedAt,
+  }) {
+    return CustomFieldModel(
+      id: id,
+      name: name ?? this.name,
+      type: type,
+      createdAt: createdAt,
+      updatedAt: updatedAt ?? DateTime.now(),
+    );
+  }
+}
+
+// Custom Field Type Enum - NEW
+enum CustomFieldType {
+  source('Source'),
+  project('Project'),
+  status('Status');
+
+  const CustomFieldType(this.displayName);
+  final String displayName;
+}
+
+// Lead Model - Updated to use custom fields
 class LeadModel {
   final String id;
   final String userId;
@@ -46,7 +109,7 @@ class LeadModel {
   final String email;
   final String source;
   final String project;
-  final LeadStatus status;
+  final String status; // Changed from LeadStatus enum to String
   final String remarks;
   final DateTime? followUp;
   final DateTime createdAt;
@@ -77,10 +140,7 @@ class LeadModel {
       email: data['email'] ?? '',
       source: data['source'] ?? '',
       project: data['project'] ?? '',
-      status: LeadStatus.values.firstWhere(
-            (e) => e.name == data['status'],
-        orElse: () => LeadStatus.new_lead,
-      ),
+      status: data['status'] ?? 'Untouched Lead',
       remarks: data['remarks'] ?? '',
       followUp: data['followUp'] != null
           ? (data['followUp'] as Timestamp).toDate()
@@ -98,7 +158,7 @@ class LeadModel {
       'email': email,
       'source': source,
       'project': project,
-      'status': status.name,
+      'status': status,
       'remarks': remarks,
       'followUp': followUp != null ? Timestamp.fromDate(followUp!) : null,
       'createdAt': Timestamp.fromDate(createdAt),
@@ -112,7 +172,7 @@ class LeadModel {
     String? email,
     String? source,
     String? project,
-    LeadStatus? status,
+    String? status,
     String? remarks,
     DateTime? followUp,
     DateTime? updatedAt,
@@ -134,15 +194,15 @@ class LeadModel {
   }
 }
 
-// Lead Status Enum
+// Legacy Lead Status Enum - Keep for backward compatibility
 enum LeadStatus {
-  new_lead('New Lead'),
-  contacted('Contacted'),
-  qualified('Qualified'),
+  new_lead('Untouched Lead'),
+  contacted('Site Visit Follow-up'),
+  qualified('Site Visit Completed'),
   proposal_sent('Proposal Sent'),
   negotiation('Negotiation'),
   closed_won('Closed Won'),
-  closed_lost('Closed Lost'),
+  closed_lost('Not Interested'),
   follow_up('Follow Up');
 
   const LeadStatus(this.displayName);
@@ -236,18 +296,18 @@ class ActivityLogModel {
   factory ActivityLogModel.statusChanged({
     required String leadId,
     required String userId,
-    required LeadStatus oldStatus,
-    required LeadStatus newStatus,
+    required String oldStatus,
+    required String newStatus,
   }) {
     return ActivityLogModel(
       id: '',
       leadId: leadId,
       userId: userId,
       actionType: ActivityType.status_change,
-      description: 'Status changed from ${oldStatus.displayName} to ${newStatus.displayName}',
+      description: 'Status changed from $oldStatus to $newStatus',
       details: {
-        'oldStatus': oldStatus.name,
-        'newStatus': newStatus.name,
+        'oldStatus': oldStatus,
+        'newStatus': newStatus,
       },
       timestamp: DateTime.now(),
     );

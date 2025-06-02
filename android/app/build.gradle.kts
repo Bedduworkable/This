@@ -6,12 +6,12 @@ plugins {
 }
 
 android {
-    namespace = "com.boringcrm.simpleleadcrm"
+    namespace = "com.example.broingcrm"
     compileSdk = 35
     ndkVersion = "27.0.12077973"
 
     defaultConfig {
-        applicationId = "com.boringcrm.simpleleadcrm"
+        applicationId = "com.example.broingcrm"
         minSdk = 21
         targetSdk = 34
         versionCode = 1

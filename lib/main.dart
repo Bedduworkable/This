@@ -8,6 +8,7 @@ import 'providers.dart';
 import 'auth_screens.dart';
 import 'lead_screens.dart';
 import 'admin_screens.dart';
+import 'custom_fields_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -115,7 +116,7 @@ class AppTheme {
   }
 }
 
-// Simple routing
+// Updated routing with new navigation structure
 class AppRouter {
   static final GoRouter router = GoRouter(
     initialLocation: '/splash',
@@ -140,6 +141,19 @@ class AppRouter {
         path: '/leads',
         builder: (context, state) => const LeadsListScreen(),
       ),
+      // NEW: Separate pages for each category
+      GoRoute(
+        path: '/leads/by-status',
+        builder: (context, state) => const LeadsByStatusScreen(),
+      ),
+      GoRoute(
+        path: '/leads/by-project',
+        builder: (context, state) => const LeadsByProjectScreen(),
+      ),
+      GoRoute(
+        path: '/leads/by-source',
+        builder: (context, state) => const LeadsBySourceScreen(),
+      ),
       GoRoute(
         path: '/lead/:id',
         builder: (context, state) => LeadDetailScreen(
@@ -155,6 +169,10 @@ class AppRouter {
         builder: (context, state) => AddEditLeadScreen(
           leadId: state.pathParameters['id'],
         ),
+      ),
+      GoRoute(
+        path: '/custom-fields',
+        builder: (context, state) => const CustomFieldsScreen(),
       ),
       GoRoute(
         path: '/admin',
@@ -209,15 +227,6 @@ class SplashScreen extends ConsumerWidget {
                 size: 40,
               ),
             ),
-            SizedBox(height: 24.h),
-            Text(
-              'Simple Lead CRM',
-              style: TextStyle(
-                fontSize: 24.sp,
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF333333),
-              ),
-            ),
             SizedBox(height: 8.h),
             Text(
               'Manage your leads efficiently',
@@ -235,4 +244,30 @@ class SplashScreen extends ConsumerWidget {
       ),
     );
   }
+}izedBox(height: 8.h),
+Text(
+'Manage your leads efficiently',
+style: TextStyle(
+fontSize: 14.sp,
+color: const Color(0xFF666666),
+),
+),
+SizedBox(height: 40.h),
+const CircularProgressIndicator(
+color: Color(0xFFE60023),
+),
+],
+),
+),
+);
 }
+}izedBox(height: 24.h),
+Text(
+'Simple Lead CRM',
+style: TextStyle(
+fontSize: 24.sp,
+fontWeight: FontWeight.bold,
+color: const Color(0xFF333333),
+),
+),
+S

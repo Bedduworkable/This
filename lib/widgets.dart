@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'dart:async';
 import 'models.dart';
 import 'utils.dart';
 import 'services.dart';
@@ -85,6 +86,7 @@ class CustomTextField extends StatelessWidget {
   final int? maxLines;
   final bool enabled;
   final VoidCallback? onTap;
+  final ValueChanged<String>? onChanged;
 
   const CustomTextField({
     super.key,
@@ -99,6 +101,7 @@ class CustomTextField extends StatelessWidget {
     this.maxLines = 1,
     this.enabled = true,
     this.onTap,
+    this.onChanged,
   });
 
   @override
@@ -123,6 +126,7 @@ class CustomTextField extends StatelessWidget {
           maxLines: maxLines,
           enabled: enabled,
           onTap: onTap,
+          onChanged: onChanged,
           style: TextStyle(
             fontSize: 16.sp,
             color: const Color(0xFF333333),
@@ -235,188 +239,135 @@ class CustomDropdown<T> extends StatelessWidget {
   }
 }
 
-// Lead Card Widget
-class LeadCard extends ConsumerWidget {
+// Compact Lead Card Widget - NEW
+class CompactLeadCard extends ConsumerWidget {
   final LeadModel lead;
-  final bool showUser;
 
-  const LeadCard({
-    super.key,
-    required this.lead,
-    this.showUser = false,
-  });
+  const CompactLeadCard({super.key, required this.lead});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Card(
-      margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
       child: InkWell(
         onTap: () => context.push('/lead/${lead.id}'),
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: EdgeInsets.all(16.w),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: EdgeInsets.all(12.w),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: const Color(0xFFE0E0E0)),
+          ),
+          child: Row(
             children: [
-              // Header with name and status
-              Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          lead.name,
-                          style: TextStyle(
-                            fontSize: 18.sp,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF333333),
-                          ),
-                        ),
-                        if (showUser) ...[
-                          SizedBox(height: 4.h),
-                          Text(
-                            'ID: ${lead.userId.substring(0, 8)}...',
-                            style: TextStyle(
-                              fontSize: 12.sp,
-                              color: const Color(0xFF999999),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
+              // Lead Avatar
+              CircleAvatar(
+                radius: 20.w,
+                backgroundColor: const Color(0xFFE60023).withOpacity(0.1),
+                child: Text(
+                  AppHelpers.initials(lead.name),
+                  style: TextStyle(
+                    color: const Color(0xFFE60023),
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w600,
                   ),
-                  LeadStatusChip(status: lead.status),
-                ],
+                ),
               ),
 
-              SizedBox(height: 12.h),
+              SizedBox(width: 12.w),
 
-              // Contact info
-              Row(
-                children: [
-                  Icon(Icons.phone_outlined, size: 16.w, color: const Color(0xFF666666)),
-                  SizedBox(width: 8.w),
-                  Expanded(
-                    child: Text(
+              // Lead Info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      lead.name,
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF333333),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    SizedBox(height: 2.h),
+                    Text(
                       AppHelpers.formatPhoneNumber(lead.phone),
                       style: TextStyle(
-                        fontSize: 14.sp,
+                        fontSize: 13.sp,
                         color: const Color(0xFF666666),
                       ),
                     ),
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.call, size: 20.w, color: const Color(0xFFE60023)),
-                    onPressed: () => CallService.makeCall(lead.phone),
-                    constraints: BoxConstraints(minWidth: 32.w, minHeight: 32.w),
-                    padding: EdgeInsets.zero,
-                  ),
-                ],
-              ),
-
-              if (lead.email.isNotEmpty) ...[
-                SizedBox(height: 8.h),
-                Row(
-                  children: [
-                    Icon(Icons.email_outlined, size: 16.w, color: const Color(0xFF666666)),
-                    SizedBox(width: 8.w),
-                    Expanded(
-                      child: Text(
-                        lead.email,
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          color: const Color(0xFF666666),
+                    SizedBox(height: 4.h),
+                    Row(
+                      children: [
+                        Icon(Icons.access_time, size: 12.w, color: const Color(0xFF999999)),
+                        SizedBox(width: 4.w),
+                        Text(
+                          AppHelpers.timeAgo(lead.updatedAt),
+                          style: TextStyle(
+                            fontSize: 11.sp,
+                            color: const Color(0xFF999999),
+                          ),
                         ),
-                      ),
+                      ],
                     ),
                   ],
                 ),
-              ],
-
-              SizedBox(height: 12.h),
-
-              // Source and Project
-              Row(
-                children: [
-                  Expanded(
-                    child: Row(
-                      children: [
-                        Icon(Icons.source_outlined, size: 16.w, color: const Color(0xFF666666)),
-                        SizedBox(width: 6.w),
-                        Text(
-                          lead.source,
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            color: const Color(0xFF666666),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (lead.project.isNotEmpty)
-                    Row(
-                      children: [
-                        Icon(Icons.business_outlined, size: 16.w, color: const Color(0xFF666666)),
-                        SizedBox(width: 6.w),
-                        Text(
-                          lead.project,
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            color: const Color(0xFF666666),
-                          ),
-                        ),
-                      ],
-                    ),
-                ],
               ),
 
-              // Follow-up reminder
-              if (lead.followUp != null) ...[
-                SizedBox(height: 12.h),
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                  decoration: BoxDecoration(
-                    color: lead.followUp!.isBefore(DateTime.now())
-                        ? const Color(0xFFFFEBEE)
-                        : const Color(0xFFE8F5E8),
-                    borderRadius: BorderRadius.circular(6),
+              // Actions
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Call Button
+                  Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE60023).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: IconButton(
+                      icon: Icon(Icons.call, size: 16.w, color: const Color(0xFFE60023)),
+                      onPressed: () async {
+                        final success = await CallService.makeCall(lead.phone);
+                        if (success && context.mounted) {
+                          showDialog(
+                            context: context,
+                            builder: (context) => CallOutcomeDialog(
+                              leadId: lead.id,
+                              leadName: lead.name,
+                            ),
+                          );
+                        }
+                      },
+                      constraints: BoxConstraints(minWidth: 32.w, minHeight: 32.w),
+                      padding: EdgeInsets.all(4.w),
+                    ),
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
+
+                  SizedBox(width: 8.w),
+
+                  // Follow-up indicator
+                  if (lead.followUp != null)
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                      decoration: BoxDecoration(
+                        color: lead.followUp!.isBefore(DateTime.now())
+                            ? const Color(0xFFFFEBEE)
+                            : const Color(0xFFE8F5E8),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(
                         Icons.schedule,
-                        size: 14.w,
+                        size: 12.w,
                         color: lead.followUp!.isBefore(DateTime.now())
                             ? const Color(0xFFE53935)
                             : const Color(0xFF4CAF50),
                       ),
-                      SizedBox(width: 4.w),
-                      Text(
-                        'Follow up: ${AppHelpers.formatDateTime(lead.followUp!)}',
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          color: lead.followUp!.isBefore(DateTime.now())
-                              ? const Color(0xFFE53935)
-                              : const Color(0xFF4CAF50),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-
-              SizedBox(height: 8.h),
-
-              // Last updated
-              Text(
-                'Updated ${AppHelpers.timeAgo(lead.updatedAt)}',
-                style: TextStyle(
-                  fontSize: 12.sp,
-                  color: const Color(0xFF999999),
-                ),
+                    ),
+                ],
               ),
             ],
           ),
@@ -426,30 +377,240 @@ class LeadCard extends ConsumerWidget {
   }
 }
 
-// Lead Status Chip Widget
-class LeadStatusChip extends StatelessWidget {
-  final LeadStatus status;
+// Compact Stats Card Widget - NEW
+class CompactStatsCard extends StatelessWidget {
+  final String title;
+  final String value;
+  final IconData icon;
+  final Color color;
+  final VoidCallback? onTap;
 
-  const LeadStatusChip({super.key, required this.status});
+  const CompactStatsCard({
+    super.key,
+    required this.title,
+    required this.value,
+    required this.icon,
+    required this.color,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final color = Color(int.parse(AppHelpers.getStatusColor(status.displayName).substring(1), radix: 16) + 0xFF000000);
+    return Card(
+      margin: EdgeInsets.symmetric(horizontal: 4.w),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: EdgeInsets.all(12.w),
+          child: Column(
+            children: [
+              Icon(
+                icon,
+                color: color,
+                size: 20.w,
+              ),
+              SizedBox(height: 4.h),
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 18.sp,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF333333),
+                ),
+              ),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 11.sp,
+                  color: const Color(0xFF666666),
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// Custom Status Chip Widget - NEW (for string-based status)
+class CustomStatusChip extends StatelessWidget {
+  final String status;
+
+  const CustomStatusChip({super.key, required this.status});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _getStatusColor(status);
 
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: color.withOpacity(0.3)),
       ),
       child: Text(
-        status.displayName,
+        status,
         style: TextStyle(
           fontSize: 12.sp,
           color: color,
-          fontWeight: FontWeight.w500,
+          fontWeight: FontWeight.w600,
         ),
+      ),
+    );
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'untouched lead':
+        return const Color(0xFF2196F3);
+      case 'site visit follow-up':
+        return const Color(0xFFFF9800);
+      case 'site visit completed':
+        return const Color(0xFF4CAF50);
+      case 'not interested':
+        return const Color(0xFFE53935);
+      default:
+        return const Color(0xFF9E9E9E);
+    }
+  }
+}
+
+// Follow-up Card Widget
+class FollowUpCard extends StatefulWidget {
+  final String leadId;
+  final DateTime followUpDate;
+  final String leadName;
+
+  const FollowUpCard({
+    super.key,
+    required this.leadId,
+    required this.followUpDate,
+    required this.leadName,
+  });
+
+  @override
+  State<FollowUpCard> createState() => _FollowUpCardState();
+}
+
+class _FollowUpCardState extends State<FollowUpCard> {
+  Timer? _timer;
+  String _timeRemaining = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _startTimer();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  void _startTimer() {
+    _updateTimeRemaining();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (mounted) {
+        _updateTimeRemaining();
+      }
+    });
+  }
+
+  void _updateTimeRemaining() {
+    final now = DateTime.now();
+    final difference = widget.followUpDate.difference(now);
+
+    if (difference.isNegative) {
+      final overdue = now.difference(widget.followUpDate);
+      setState(() {
+        _timeRemaining = 'Overdue by ${_formatDuration(overdue)}';
+      });
+    } else {
+      setState(() {
+        _timeRemaining = 'Due in ${_formatDuration(difference)}';
+      });
+    }
+  }
+
+  String _formatDuration(Duration duration) {
+    if (duration.inDays > 0) {
+      return '${duration.inDays} day${duration.inDays > 1 ? 's' : ''}';
+    } else if (duration.inHours > 0) {
+      return '${duration.inHours} hour${duration.inHours > 1 ? 's' : ''}';
+    } else {
+      return '${duration.inMinutes} minute${duration.inMinutes > 1 ? 's' : ''}';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isOverdue = widget.followUpDate.isBefore(DateTime.now());
+
+    return Container(
+      padding: EdgeInsets.all(16.w),
+      decoration: BoxDecoration(
+        color: isOverdue ? const Color(0xFFFFEBEE) : const Color(0xFFE8F5E8),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isOverdue ? const Color(0xFFE53935) : const Color(0xFF4CAF50),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.schedule,
+                size: 20.w,
+                color: isOverdue ? const Color(0xFFE53935) : const Color(0xFF4CAF50),
+              ),
+              SizedBox(width: 8.w),
+              Text(
+                'Follow-up Reminder',
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w600,
+                  color: isOverdue ? const Color(0xFFE53935) : const Color(0xFF4CAF50),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            AppHelpers.formatDateTime(widget.followUpDate),
+            style: TextStyle(
+              fontSize: 14.sp,
+              color: const Color(0xFF666666),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          SizedBox(height: 4.h),
+          Text(
+            _timeRemaining,
+            style: TextStyle(
+              fontSize: 16.sp,
+              color: isOverdue ? const Color(0xFFE53935) : const Color(0xFF4CAF50),
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          if (isOverdue) ...[
+            SizedBox(height: 12.h),
+            CustomButton(
+              text: 'Mark as Completed',
+              backgroundColor: const Color(0xFFE53935),
+              onPressed: () {
+                context.push('/edit-lead/${widget.leadId}');
+              },
+            ),
+          ],
+        ],
       ),
     );
   }
@@ -727,7 +888,7 @@ class CustomErrorWidget extends StatelessWidget {
 }
 
 // Custom Search Bar Widget
-class CustomSearchBar extends StatelessWidget {
+class CustomSearchBar extends ConsumerStatefulWidget {
   final TextEditingController controller;
   final ValueChanged<String> onChanged;
   final String hint;
@@ -740,18 +901,26 @@ class CustomSearchBar extends StatelessWidget {
   });
 
   @override
+  ConsumerState<CustomSearchBar> createState() => _CustomSearchBarState();
+}
+
+class _CustomSearchBarState extends ConsumerState<CustomSearchBar> {
+  @override
   Widget build(BuildContext context) {
     return Container(
       margin: EdgeInsets.all(16.w),
       child: TextField(
-        controller: controller,
-        onChanged: onChanged,
+        controller: widget.controller,
+        onChanged: (value) {
+          widget.onChanged(value);
+          setState(() {});
+        },
         style: TextStyle(
           fontSize: 16.sp,
           color: const Color(0xFF333333),
         ),
         decoration: InputDecoration(
-          hintText: hint,
+          hintText: widget.hint,
           hintStyle: TextStyle(
             fontSize: 16.sp,
             color: const Color(0xFF999999),
@@ -761,7 +930,7 @@ class CustomSearchBar extends StatelessWidget {
             color: const Color(0xFF666666),
             size: 20.w,
           ),
-          suffixIcon: controller.text.isNotEmpty
+          suffixIcon: widget.controller.text.isNotEmpty
               ? IconButton(
             icon: Icon(
               Icons.clear,
@@ -769,8 +938,9 @@ class CustomSearchBar extends StatelessWidget {
               size: 20.w,
             ),
             onPressed: () {
-              controller.clear();
-              onChanged('');
+              widget.controller.clear();
+              widget.onChanged('');
+              setState(() {});
             },
           )
               : null,
@@ -789,83 +959,6 @@ class CustomSearchBar extends StatelessWidget {
           filled: true,
           fillColor: Colors.white,
           contentPadding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
-        ),
-      ),
-    );
-  }
-}
-
-// Stats Card Widget
-class StatsCard extends StatelessWidget {
-  final String title;
-  final String value;
-  final IconData icon;
-  final Color color;
-  final VoidCallback? onTap;
-
-  const StatsCard({
-    super.key,
-    required this.title,
-    required this.value,
-    required this.icon,
-    required this.color,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: EdgeInsets.all(8.w),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: EdgeInsets.all(16.w),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: EdgeInsets.all(8.w),
-                    decoration: BoxDecoration(
-                      color: color.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(
-                      icon,
-                      color: color,
-                      size: 24.w,
-                    ),
-                  ),
-                  const Spacer(),
-                  if (onTap != null)
-                    Icon(
-                      Icons.arrow_forward_ios,
-                      size: 16.w,
-                      color: const Color(0xFF999999),
-                    ),
-                ],
-              ),
-              SizedBox(height: 12.h),
-              Text(
-                value,
-                style: TextStyle(
-                  fontSize: 24.sp,
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF333333),
-                ),
-              ),
-              SizedBox(height: 4.h),
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  color: const Color(0xFF666666),
-                ),
-              ),
-            ],
-          ),
         ),
       ),
     );

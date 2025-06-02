@@ -44,38 +44,38 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'YOUR_WEB_API_KEY',
-    appId: 'YOUR_WEB_APP_ID',
-    messagingSenderId: 'YOUR_SENDER_ID',
-    projectId: 'YOUR_PROJECT_ID',
-    authDomain: 'YOUR_PROJECT_ID.firebaseapp.com',
-    storageBucket: 'YOUR_PROJECT_ID.appspot.com',
-    measurementId: 'YOUR_MEASUREMENT_ID',
+    apiKey: 'AIzaSyAg366X9mUZQ5k-aEK-1h43LVg-x5Xssc4',
+    appId: '1:586591854546:web:your_web_app_id',
+    messagingSenderId: '586591854546',
+    projectId: 'boringcrm-6418a',
+    authDomain: 'boringcrm-6418a.firebaseapp.com',
+    storageBucket: 'boringcrm-6418a.firebasestorage.app',
+    measurementId: 'G-XXXXXXXXXX',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'YOUR_ANDROID_API_KEY',
-    appId: 'YOUR_ANDROID_APP_ID',
-    messagingSenderId: 'YOUR_SENDER_ID',
-    projectId: 'YOUR_PROJECT_ID',
-    storageBucket: 'YOUR_PROJECT_ID.appspot.com',
+    apiKey: 'AIzaSyAg366X9mUZQ5k-aEK-1h43LVg-x5Xssc4',
+    appId: '1:586591854546:android:d4dd4aee1fcfa5834a720b',
+    messagingSenderId: '586591854546',
+    projectId: 'boringcrm-6418a',
+    storageBucket: 'boringcrm-6418a.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'YOUR_IOS_API_KEY',
-    appId: 'YOUR_IOS_APP_ID',
-    messagingSenderId: 'YOUR_SENDER_ID',
-    projectId: 'YOUR_PROJECT_ID',
-    storageBucket: 'YOUR_PROJECT_ID.appspot.com',
-    iosBundleId: 'com.example.simpleLeadCrm',
+    apiKey: 'AIzaSyAg366X9mUZQ5k-aEK-1h43LVg-x5Xssc4',
+    appId: '1:586591854546:ios:your_ios_app_id',
+    messagingSenderId: '586591854546',
+    projectId: 'boringcrm-6418a',
+    storageBucket: 'boringcrm-6418a.firebasestorage.app',
+    iosBundleId: 'com.example.broingcrm',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'YOUR_IOS_API_KEY',
-    appId: 'YOUR_IOS_APP_ID',
-    messagingSenderId: 'YOUR_SENDER_ID',
-    projectId: 'YOUR_PROJECT_ID',
-    storageBucket: 'YOUR_PROJECT_ID.appspot.com',
-    iosBundleId: 'com.example.simpleLeadCrm',
+    apiKey: 'AIzaSyAg366X9mUZQ5k-aEK-1h43LVg-x5Xssc4',
+    appId: '1:586591854546:ios:your_ios_app_id',
+    messagingSenderId: '586591854546',
+    projectId: 'boringcrm-6418a',
+    storageBucket: 'boringcrm-6418a.firebasestorage.app',
+    iosBundleId: 'com.example.broingcrm',
   );
 }

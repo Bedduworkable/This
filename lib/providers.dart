@@ -79,6 +79,56 @@ final authControllerProvider = StateNotifierProvider<AuthController, AsyncValue<
   return AuthController();
 });
 
+// Custom Fields Providers - NEW
+final customFieldsProvider = StreamProvider.family<List<CustomFieldModel>, CustomFieldType>((ref, type) {
+  return FirestoreService.getCustomFields(type);
+});
+
+// Custom Fields Controller - NEW
+class CustomFieldsController extends StateNotifier<AsyncValue<void>> {
+  CustomFieldsController(this.ref) : super(const AsyncValue.data(null));
+
+  final Ref ref;
+
+  Future<void> addCustomField(CustomFieldType type, String name) async {
+    state = const AsyncValue.loading();
+    try {
+      final field = CustomFieldModel(
+        id: '',
+        name: name,
+        type: type,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      await FirestoreService.createCustomField(field);
+      state = const AsyncValue.data(null);
+
+      // Refresh the custom fields
+      ref.invalidate(customFieldsProvider(type));
+    } catch (e) {
+      state = AsyncValue.error(e, StackTrace.current);
+    }
+  }
+
+  Future<void> updateCustomField(String fieldId, String newName) async {
+    state = const AsyncValue.loading();
+    try {
+      await FirestoreService.updateCustomField(fieldId, newName);
+      state = const AsyncValue.data(null);
+
+      // Refresh all custom fields
+      ref.invalidate(customFieldsProvider);
+    } catch (e) {
+      state = AsyncValue.error(e, StackTrace.current);
+    }
+  }
+}
+
+final customFieldsControllerProvider = StateNotifierProvider<CustomFieldsController, AsyncValue<void>>((ref) {
+  return CustomFieldsController(ref);
+});
+
 // Lead Providers
 final userLeadsProvider = StreamProvider<List<LeadModel>>((ref) {
   final user = ref.watch(authStateProvider).value;
@@ -93,6 +143,7 @@ final allLeadsProvider = StreamProvider<List<LeadModel>>((ref) {
 });
 
 final leadProvider = FutureProvider.family<LeadModel?, String>((ref, leadId) async {
+  ref.watch(userLeadsProvider);
   return await FirestoreService.getLead(leadId);
 });
 
@@ -102,13 +153,18 @@ final activityLogsProvider = StreamProvider.family<List<ActivityLogModel>, Strin
 
 // Lead Controller
 class LeadController extends StateNotifier<AsyncValue<void>> {
-  LeadController() : super(const AsyncValue.data(null));
+  LeadController(this.ref) : super(const AsyncValue.data(null));
+
+  final Ref ref;
 
   Future<String?> createLead(LeadModel lead) async {
     state = const AsyncValue.loading();
     try {
       final leadId = await FirestoreService.createLead(lead);
       state = const AsyncValue.data(null);
+
+      ref.invalidate(userLeadsProvider);
+
       return leadId;
     } catch (e) {
       state = AsyncValue.error(e, StackTrace.current);
@@ -121,6 +177,10 @@ class LeadController extends StateNotifier<AsyncValue<void>> {
     try {
       await FirestoreService.updateLead(leadId, oldLead, newLead);
       state = const AsyncValue.data(null);
+
+      ref.invalidate(userLeadsProvider);
+      ref.invalidate(leadProvider(leadId));
+
     } catch (e) {
       state = AsyncValue.error(e, StackTrace.current);
     }
@@ -137,6 +197,9 @@ class LeadController extends StateNotifier<AsyncValue<void>> {
         outcome: outcome,
         notes: notes,
       );
+
+      ref.invalidate(activityLogsProvider(leadId));
+
     } catch (e) {
       state = AsyncValue.error(e, StackTrace.current);
     }
@@ -144,52 +207,104 @@ class LeadController extends StateNotifier<AsyncValue<void>> {
 }
 
 final leadControllerProvider = StateNotifierProvider<LeadController, AsyncValue<void>>((ref) {
-  return LeadController();
+  return LeadController(ref);
 });
 
 // Search and Filter Providers
 final searchQueryProvider = StateProvider<String>((ref) => '');
 
+// Lead Filter Model - NEW
+class LeadFilter {
+  final String? source;
+  final String? project;
+  final String? status;
+  final DateTime? dateFrom;
+  final DateTime? dateTo;
+
+  const LeadFilter({
+    this.source,
+    this.project,
+    this.status,
+    this.dateFrom,
+    this.dateTo,
+  });
+}
+
+final leadFilterProvider = StateProvider<LeadFilter>((ref) => const LeadFilter());
+
+// Filtered Leads Provider - Updated
 final filteredLeadsProvider = Provider<List<LeadModel>>((ref) {
   final leads = ref.watch(userLeadsProvider).value ?? [];
-  final query = ref.watch(searchQueryProvider);
+  final query = ref.watch(searchQueryProvider).trim().toLowerCase();
+  final filter = ref.watch(leadFilterProvider);
 
-  if (query.isEmpty) return leads;
+  var filteredLeads = leads;
 
-  return leads.where((lead) {
-    return lead.name.toLowerCase().contains(query.toLowerCase()) ||
-        lead.phone.contains(query) ||
-        lead.email.toLowerCase().contains(query.toLowerCase()) ||
-        lead.source.toLowerCase().contains(query.toLowerCase()) ||
-        lead.project.toLowerCase().contains(query.toLowerCase());
-  }).toList();
+  // Apply search
+  if (query.isNotEmpty) {
+    filteredLeads = filteredLeads.where((lead) {
+      final searchText = '${lead.name} ${lead.phone} ${lead.email} ${lead.source} ${lead.project} ${lead.status}'.toLowerCase();
+      return searchText.contains(query) ||
+          lead.name.toLowerCase().contains(query) ||
+          lead.phone.replaceAll(RegExp(r'[^\d]'), '').contains(query.replaceAll(RegExp(r'[^\d]'), '')) ||
+          lead.email.toLowerCase().contains(query) ||
+          lead.source.toLowerCase().contains(query) ||
+          lead.project.toLowerCase().contains(query) ||
+          lead.status.toLowerCase().contains(query);
+    }).toList();
+  }
+
+  // Apply filters
+  if (filter.source != null) {
+    filteredLeads = filteredLeads.where((lead) => lead.source == filter.source).toList();
+  }
+  if (filter.project != null) {
+    filteredLeads = filteredLeads.where((lead) => lead.project == filter.project).toList();
+  }
+  if (filter.status != null) {
+    filteredLeads = filteredLeads.where((lead) => lead.status == filter.status).toList();
+  }
+  if (filter.dateFrom != null) {
+    filteredLeads = filteredLeads.where((lead) => lead.createdAt.isAfter(filter.dateFrom!)).toList();
+  }
+  if (filter.dateTo != null) {
+    final endDate = DateTime(filter.dateTo!.year, filter.dateTo!.month, filter.dateTo!.day, 23, 59, 59);
+    filteredLeads = filteredLeads.where((lead) => lead.createdAt.isBefore(endDate)).toList();
+  }
+
+  return filteredLeads;
 });
 
-final filteredAllLeadsProvider = Provider<List<LeadModel>>((ref) {
-  final leads = ref.watch(allLeadsProvider).value ?? [];
-  final query = ref.watch(searchQueryProvider);
+// Lead Grouping - NEW
+enum LeadGroupBy { source, status, project }
 
-  if (query.isEmpty) return leads;
-
-  return leads.where((lead) {
-    return lead.name.toLowerCase().contains(query.toLowerCase()) ||
-        lead.phone.contains(query) ||
-        lead.email.toLowerCase().contains(query.toLowerCase()) ||
-        lead.source.toLowerCase().contains(query.toLowerCase()) ||
-        lead.project.toLowerCase().contains(query.toLowerCase());
-  }).toList();
-});
-
-// Status Filter Provider
-final statusFilterProvider = StateProvider<LeadStatus?>((ref) => null);
-
-final statusFilteredLeadsProvider = Provider<List<LeadModel>>((ref) {
+final groupedLeadsProvider = Provider.family<List<MapEntry<String, List<LeadModel>>>, LeadGroupBy>((ref, groupBy) {
   final leads = ref.watch(filteredLeadsProvider);
-  final statusFilter = ref.watch(statusFilterProvider);
 
-  if (statusFilter == null) return leads;
+  final Map<String, List<LeadModel>> grouped = {};
 
-  return leads.where((lead) => lead.status == statusFilter).toList();
+  for (final lead in leads) {
+    String key;
+    switch (groupBy) {
+      case LeadGroupBy.source:
+        key = lead.source;
+        break;
+      case LeadGroupBy.status:
+        key = lead.status;
+        break;
+      case LeadGroupBy.project:
+        key = lead.project;
+        break;
+    }
+
+    grouped.putIfAbsent(key, () => []).add(lead);
+  }
+
+  // Sort groups by count (descending)
+  final sortedEntries = grouped.entries.toList()
+    ..sort((a, b) => b.value.length.compareTo(a.value.length));
+
+  return sortedEntries;
 });
 
 // Admin Providers
@@ -262,16 +377,25 @@ final overdueRemindersProvider = Provider<List<LeadModel>>((ref) {
   }).toList();
 });
 
-// Dashboard Statistics Providers
+// Dashboard Statistics Providers - Updated
 final leadStatsProvider = Provider<Map<String, int>>((ref) {
   final leads = ref.watch(userLeadsProvider).value ?? [];
 
   final stats = <String, int>{};
   stats['total'] = leads.length;
 
-  for (final status in LeadStatus.values) {
-    stats[status.name] = leads.where((lead) => lead.status == status).length;
+  // Define active vs completed statuses
+  final completedStatuses = ['Site Visit Completed', 'Not Interested'];
+
+  stats['active'] = leads.where((lead) => !completedStatuses.contains(lead.status)).length;
+  stats['completed'] = leads.where((lead) => completedStatuses.contains(lead.status)).length;
+
+  // Count by each status
+  final statusCounts = <String, int>{};
+  for (final lead in leads) {
+    statusCounts[lead.status] = (statusCounts[lead.status] ?? 0) + 1;
   }
+  stats.addAll(statusCounts);
 
   return stats;
 });
@@ -282,128 +406,18 @@ final adminLeadStatsProvider = Provider<Map<String, int>>((ref) {
   final stats = <String, int>{};
   stats['total'] = leads.length;
 
-  for (final status in LeadStatus.values) {
-    stats[status.name] = leads.where((lead) => lead.status == status).length;
+  // Define active vs completed statuses
+  final completedStatuses = ['Site Visit Completed', 'Not Interested'];
+
+  stats['active'] = leads.where((lead) => !completedStatuses.contains(lead.status)).length;
+  stats['completed'] = leads.where((lead) => completedStatuses.contains(lead.status)).length;
+
+  // Count by each status
+  final statusCounts = <String, int>{};
+  for (final lead in leads) {
+    statusCounts[lead.status] = (statusCounts[lead.status] ?? 0) + 1;
   }
+  stats.addAll(statusCounts);
 
   return stats;
 });
-
-// Form Providers
-final leadFormProvider = StateNotifierProvider<LeadFormController, LeadFormState>((ref) {
-  return LeadFormController();
-});
-
-class LeadFormState {
-  final String name;
-  final String phone;
-  final String email;
-  final String source;
-  final String project;
-  final LeadStatus status;
-  final String remarks;
-  final DateTime? followUp;
-
-  LeadFormState({
-    this.name = '',
-    this.phone = '',
-    this.email = '',
-    this.source = '',
-    this.project = '',
-    this.status = LeadStatus.new_lead,
-    this.remarks = '',
-    this.followUp,
-  });
-
-  LeadFormState copyWith({
-    String? name,
-    String? phone,
-    String? email,
-    String? source,
-    String? project,
-    LeadStatus? status,
-    String? remarks,
-    DateTime? followUp,
-  }) {
-    return LeadFormState(
-      name: name ?? this.name,
-      phone: phone ?? this.phone,
-      email: email ?? this.email,
-      source: source ?? this.source,
-      project: project ?? this.project,
-      status: status ?? this.status,
-      remarks: remarks ?? this.remarks,
-      followUp: followUp ?? this.followUp,
-    );
-  }
-
-  LeadModel toLead(String userId, {String? existingId}) {
-    return LeadModel(
-      id: existingId ?? '',
-      userId: userId,
-      name: name,
-      phone: phone,
-      email: email,
-      source: source,
-      project: project,
-      status: status,
-      remarks: remarks,
-      followUp: followUp,
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-    );
-  }
-}
-
-class LeadFormController extends StateNotifier<LeadFormState> {
-  LeadFormController() : super(LeadFormState());
-
-  void updateName(String name) {
-    state = state.copyWith(name: name);
-  }
-
-  void updatePhone(String phone) {
-    state = state.copyWith(phone: phone);
-  }
-
-  void updateEmail(String email) {
-    state = state.copyWith(email: email);
-  }
-
-  void updateSource(String source) {
-    state = state.copyWith(source: source);
-  }
-
-  void updateProject(String project) {
-    state = state.copyWith(project: project);
-  }
-
-  void updateStatus(LeadStatus status) {
-    state = state.copyWith(status: status);
-  }
-
-  void updateRemarks(String remarks) {
-    state = state.copyWith(remarks: remarks);
-  }
-
-  void updateFollowUp(DateTime? followUp) {
-    state = state.copyWith(followUp: followUp);
-  }
-
-  void loadLead(LeadModel lead) {
-    state = LeadFormState(
-      name: lead.name,
-      phone: lead.phone,
-      email: lead.email,
-      source: lead.source,
-      project: lead.project,
-      status: lead.status,
-      remarks: lead.remarks,
-      followUp: lead.followUp,
-    );
-  }
-
-  void reset() {
-    state = LeadFormState();
-  }
-}

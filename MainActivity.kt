@@ -1,4 +1,4 @@
-package com.boringcrm.simpleleadcrm
+package com.example.broingcrm
 
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
