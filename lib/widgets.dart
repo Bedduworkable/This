@@ -9,6 +9,47 @@ import 'utils.dart';
 import 'services.dart';
 import 'providers.dart';
 
+// Reusable app bar with a premium gradient background
+class PremiumAppBar extends StatelessWidget implements PreferredSizeWidget {
+  final String title;
+  final List<Widget>? actions;
+  final PreferredSizeWidget? bottom;
+  final bool automaticallyImplyLeading;
+
+  const PremiumAppBar({
+    super.key,
+    required this.title,
+    this.actions,
+    this.bottom,
+    this.automaticallyImplyLeading = true,
+  });
+
+  @override
+  Size get preferredSize =>
+      Size.fromHeight(kToolbarHeight + (bottom?.preferredSize.height ?? 0));
+
+  @override
+  Widget build(BuildContext context) {
+    return AppBar(
+      title: Text(title),
+      actions: actions,
+      bottom: bottom,
+      automaticallyImplyLeading: automaticallyImplyLeading,
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      flexibleSpace: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF1E40AF), Color(0xFF3B82F6)],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 // Custom Button Widget
 class CustomButton extends StatelessWidget {
   final String text;

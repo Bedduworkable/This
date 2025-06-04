@@ -660,8 +660,8 @@ class _LeadsByStatusScreenState extends ConsumerState<LeadsByStatusScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFFAFAFA),
-      appBar: AppBar(
-        title: const Text('Leads by Status'),
+      appBar: PremiumAppBar(
+        title: 'Leads by Status',
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
@@ -766,8 +766,8 @@ class _LeadsByProjectScreenState extends ConsumerState<LeadsByProjectScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFFAFAFA),
-      appBar: AppBar(
-        title: const Text('Leads by Project'),
+      appBar: PremiumAppBar(
+        title: 'Leads by Project',
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
@@ -872,8 +872,8 @@ class _LeadsBySourceScreenState extends ConsumerState<LeadsBySourceScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFFAFAFA),
-      appBar: AppBar(
-        title: const Text('Leads by Source'),
+      appBar: PremiumAppBar(
+        title: 'Leads by Source',
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
@@ -1103,7 +1103,7 @@ class LeadDetailScreen extends ConsumerWidget {
         body: LoadingWidget(message: 'Loading lead details...'),
       ),
       error: (error, stack) => Scaffold(
-        appBar: AppBar(title: const Text('Lead Details')),
+        appBar: const PremiumAppBar(title: 'Lead Details'),
         body: CustomErrorWidget(
           message: error.toString(),
           onRetry: () => ref.refresh(leadProvider(leadId)),
@@ -1112,7 +1112,7 @@ class LeadDetailScreen extends ConsumerWidget {
       data: (lead) {
         if (lead == null) {
           return Scaffold(
-            appBar: AppBar(title: const Text('Lead Not Found')),
+            appBar: const PremiumAppBar(title: 'Lead Not Found'),
             body: const EmptyState(
               title: 'Lead not found',
               subtitle: 'This lead may have been deleted or moved',
@@ -1123,8 +1123,8 @@ class LeadDetailScreen extends ConsumerWidget {
 
         return Scaffold(
           backgroundColor: const Color(0xFFFAFAFA),
-          appBar: AppBar(
-            title: Text(lead.name),
+          appBar: PremiumAppBar(
+            title: lead.name,
             actions: [
               IconButton(
                 icon: const Icon(Icons.edit),
@@ -1606,8 +1606,8 @@ class _AddEditLeadScreenState extends ConsumerState<AddEditLeadScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFFAFAFA),
-      appBar: AppBar(
-        title: Text(isEditing ? 'Edit Lead' : 'Add Lead'),
+      appBar: PremiumAppBar(
+        title: isEditing ? 'Edit Lead' : 'Add Lead',
         actions: [
           TextButton(
             onPressed: _isLoading ? null : _saveLead,

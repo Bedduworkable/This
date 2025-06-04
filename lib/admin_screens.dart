@@ -19,8 +19,8 @@ class AdminDashboard extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: const Color(0xFFFAFAFA),
-      appBar: AppBar(
-        title: const Text('Admin Dashboard'),
+      appBar: PremiumAppBar(
+        title: 'Admin Dashboard',
         actions: [
           IconButton(
             icon: const Icon(Icons.people),
@@ -375,9 +375,7 @@ class _AdminLeadsScreenState extends ConsumerState<AdminLeadsScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFFAFAFA),
-      appBar: AppBar(
-        title: const Text('All Leads'),
-      ),
+      appBar: const PremiumAppBar(title: 'All Leads'),
       body: Column(
         children: [
           // Search Bar
@@ -664,9 +662,7 @@ class _AdminNotificationsScreenState extends ConsumerState<AdminNotificationsScr
 
     return Scaffold(
       backgroundColor: const Color(0xFFFAFAFA),
-      appBar: AppBar(
-        title: const Text('Send Notifications'),
-      ),
+      appBar: const PremiumAppBar(title: 'Send Notifications'),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16.w),
         child: Form(

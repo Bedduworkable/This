@@ -35,19 +35,8 @@ class _CustomFieldsScreenState extends ConsumerState<CustomFieldsScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFF1E40AF), Color(0xFF3B82F6)],
-            ),
-          ),
-        ),
-        title: const Text('Manage Custom Fields'),
+      appBar: PremiumAppBar(
+        title: 'Manage Custom Fields',
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: Colors.white,
