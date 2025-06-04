@@ -84,7 +84,7 @@ class CustomFieldModel {
       id: id,
       name: name ?? this.name,
       type: type,
-      createdAt: createdAt,
+      createdAt: this.createdAt,
       updatedAt: updatedAt ?? DateTime.now(),
     );
   }
@@ -188,7 +188,7 @@ class LeadModel {
       status: status ?? this.status,
       remarks: remarks ?? this.remarks,
       followUp: followUp ?? this.followUp,
-      createdAt: createdAt,
+      createdAt: this.createdAt,
       updatedAt: updatedAt ?? DateTime.now(),
     );
   }

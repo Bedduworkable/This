@@ -111,14 +111,18 @@ class CustomFieldsController extends StateNotifier<AsyncValue<void>> {
     }
   }
 
-  Future<void> updateCustomField(String fieldId, String newName) async {
+  Future<void> updateCustomField(
+    String fieldId,
+    CustomFieldType type,
+    String newName,
+  ) async {
     state = const AsyncValue.loading();
     try {
       await FirestoreService.updateCustomField(fieldId, newName);
       state = const AsyncValue.data(null);
 
-      // Refresh all custom fields
-      ref.invalidate(customFieldsProvider);
+      // Refresh the updated custom field list
+      ref.invalidate(customFieldsProvider(type));
     } catch (e) {
       state = AsyncValue.error(e, StackTrace.current);
     }

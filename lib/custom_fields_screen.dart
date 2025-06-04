@@ -248,7 +248,11 @@ class CustomFieldsList extends ConsumerWidget {
                 onPressed: () async {
                   if (formKey.currentState!.validate()) {
                     await ref.read(customFieldsControllerProvider.notifier)
-                        .updateCustomField(field.id, controller.text.trim());
+                        .updateCustomField(
+                          field.id,
+                          field.type,
+                          controller.text.trim(),
+                        );
                     if (context.mounted) {
                       Navigator.of(context).pop();
                       ScaffoldMessenger.of(context).showSnackBar(
