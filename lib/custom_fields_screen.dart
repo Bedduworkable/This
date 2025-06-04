@@ -34,11 +34,25 @@ class _CustomFieldsScreenState extends ConsumerState<CustomFieldsScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFAFAFA),
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF1E40AF), Color(0xFF3B82F6)],
+            ),
+          ),
+        ),
         title: const Text('Manage Custom Fields'),
         bottom: TabBar(
           controller: _tabController,
+          indicatorColor: Colors.white,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white70,
           tabs: const [
             Tab(text: 'Sources'),
             Tab(text: 'Projects'),
@@ -74,9 +88,11 @@ class CustomFieldsList extends ConsumerWidget {
         // Add Button
         Container(
           padding: EdgeInsets.all(16.w),
+          width: double.infinity,
           child: CustomButton(
             text: 'Add New ${type.displayName}',
             icon: Icons.add,
+            backgroundColor: const Color(0xFF3B82F6),
             onPressed: () => _showAddDialog(context, ref, type),
           ),
         ),
@@ -104,11 +120,31 @@ class CustomFieldsList extends ConsumerWidget {
                 itemCount: fields.length,
                 itemBuilder: (context, index) {
                   final field = fields[index];
-                  return Card(
-                    margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
+                  return Container(
+                    margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF1F2937).withOpacity(0.05),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
                     child: ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: _getTypeColor(type).withOpacity(0.1),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 16.w,
+                        vertical: 8.h,
+                      ),
+                      leading: Container(
+                        width: 40.w,
+                        height: 40.w,
+                        decoration: BoxDecoration(
+                          color: _getTypeColor(type).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                         child: Icon(
                           _getTypeIcon(type),
                           color: _getTypeColor(type),
@@ -119,23 +155,19 @@ class CustomFieldsList extends ConsumerWidget {
                         field.name,
                         style: TextStyle(
                           fontSize: 16.sp,
-                          fontWeight: FontWeight.w500,
-                          color: const Color(0xFF333333),
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF1F2937),
                         ),
                       ),
                       subtitle: Text(
                         'Created ${AppHelpers.timeAgo(field.createdAt)}',
                         style: TextStyle(
                           fontSize: 12.sp,
-                          color: const Color(0xFF999999),
+                          color: const Color(0xFF6B7280),
                         ),
                       ),
                       trailing: IconButton(
-                        icon: Icon(
-                          Icons.edit,
-                          color: const Color(0xFF666666),
-                          size: 20.w,
-                        ),
+                        icon: const Icon(Icons.edit, color: Color(0xFF6B7280)),
                         onPressed: () => _showEditDialog(context, ref, field),
                       ),
                     ),
@@ -178,6 +210,7 @@ class CustomFieldsList extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text('Add New ${type.displayName}'),
         content: Form(
           key: formKey,
@@ -188,6 +221,7 @@ class CustomFieldsList extends ConsumerWidget {
             validator: (value) => Validators.required(value, '${type.displayName} name'),
           ),
         ),
+        actionsPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -195,7 +229,10 @@ class CustomFieldsList extends ConsumerWidget {
           ),
           Consumer(
             builder: (context, ref, child) {
-              return TextButton(
+              return CustomButton(
+                text: 'Add',
+                isLoading: ref.watch(customFieldsControllerProvider).isLoading,
+                backgroundColor: const Color(0xFF3B82F6),
                 onPressed: () async {
                   if (formKey.currentState!.validate()) {
                     await ref.read(customFieldsControllerProvider.notifier)
@@ -211,7 +248,6 @@ class CustomFieldsList extends ConsumerWidget {
                     }
                   }
                 },
-                child: const Text('Add'),
               );
             },
           ),
@@ -227,6 +263,7 @@ class CustomFieldsList extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text('Edit ${field.type.displayName}'),
         content: Form(
           key: formKey,
@@ -237,6 +274,7 @@ class CustomFieldsList extends ConsumerWidget {
             validator: (value) => Validators.required(value, '${field.type.displayName} name'),
           ),
         ),
+        actionsPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -244,7 +282,10 @@ class CustomFieldsList extends ConsumerWidget {
           ),
           Consumer(
             builder: (context, ref, child) {
-              return TextButton(
+              return CustomButton(
+                text: 'Update',
+                isLoading: ref.watch(customFieldsControllerProvider).isLoading,
+                backgroundColor: const Color(0xFF3B82F6),
                 onPressed: () async {
                   if (formKey.currentState!.validate()) {
                     await ref.read(customFieldsControllerProvider.notifier)
@@ -264,7 +305,6 @@ class CustomFieldsList extends ConsumerWidget {
                     }
                   }
                 },
-                child: const Text('Update'),
               );
             },
           ),
